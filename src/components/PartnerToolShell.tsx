@@ -32,7 +32,7 @@ export function PartnerToolShell({
   children: ReactNode;
   maxWidthClass?: string;
 }) {
-  const { partnerName, partnerSiteUrl, poweredByUrl } = getPartnerConfig();
+  const { partnerName, partnerSiteUrl, poweredByUrl, poweredByLabel } = getPartnerConfig();
   const displayName = partnerName ?? "役員報酬シミュレーター";
 
   return (
@@ -57,7 +57,7 @@ export function PartnerToolShell({
             rel="noreferrer"
             className="text-[10px] font-bold text-slate-400 hover:text-slate-600"
           >
-            Powered by TAXX
+            Powered by {poweredByLabel}
           </a>
         </div>
       </header>
@@ -108,7 +108,7 @@ export function PartnerToolShell({
               </>
             ) : null}
             <a href={poweredByUrl} className="hover:text-slate-600">
-              Powered by TAXX
+              Powered by {poweredByLabel}
             </a>
             {" · "}
             計算結果は参考情報です
