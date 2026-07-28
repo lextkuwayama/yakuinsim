@@ -9,15 +9,25 @@ from __future__ import annotations
 import csv
 import io
 import json
+import os
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-STORAGE_DIR = Path(__file__).resolve().parent.parent / "storage"
-LEGAL_MASTER_DB_PATH = STORAGE_DIR / "legal_master.db"
 SEED_CSV_PATH = Path(__file__).resolve().parent.parent / "config" / "legal_master_seed.csv"
+
+
+def _legal_master_db_path() -> Path:
+    """Vercel はデプロイ領域が読み取り専用なので /tmp に置く。"""
+    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        return Path("/tmp") / "sim_officer_legal_master.db"
+    storage = Path(__file__).resolve().parent.parent / "storage"
+    return storage / "legal_master.db"
+
+
+LEGAL_MASTER_DB_PATH = _legal_master_db_path()
 
 CSV_COLUMNS = [
     "domain",
