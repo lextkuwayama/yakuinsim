@@ -3,12 +3,42 @@ import type { ReactNode } from "react";
 import { getPartnerConfig } from "@/config/partner";
 import { toolsTheme } from "@/lib/theme";
 
+function BetaNotice() {
+  return (
+    <div
+      className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] leading-relaxed text-amber-950"
+      role="note"
+    >
+      <p className="text-xs font-black">ベータ版について</p>
+      <p className="mt-1">
+        本ツールは検証段階の<strong>ベータ版</strong>です。表示内容・計算ロジックは予告なく変更される場合があり、
+        不具合や数値の誤りが含まれる可能性があります。社内確認・参考試算以外の目的での利用はお控えください。
+      </p>
+    </div>
+  );
+}
+
 function Disclaimer() {
   return (
-    <p className={toolsTheme.notice}>
-      本ツールの計算結果は、公表されている法令等をもとにした<strong>参考情報</strong>です。
-      実際の税額・判定は個別事情により異なる場合があります。最終的な税務判断は税理士等の専門家にご確認ください。
-    </p>
+    <div className={toolsTheme.notice}>
+      <p className="text-xs font-black text-[var(--taxx-green-900)]">免責事項</p>
+      <ul className="mt-2 list-disc space-y-1.5 pl-4 text-[11px] leading-relaxed">
+        <li>
+          本ツールの計算結果は、公表されている法令等をもとにした<strong>参考情報</strong>であり、
+          税務・社会保険に関するアドバイスではありません。
+        </li>
+        <li>
+          実際の税額・社会保険料・最適な役員報酬の水準は、個別の会社・役員の状況により異なります。
+          結果の正確性・完全性・最新性を保証するものではありません。
+        </li>
+        <li>
+          役員報酬は毎月定額（賞与なし）など、簡易化した前提での試算です。
+          配偶者控除・扶養控除・外形標準課税など、すべての特例・控除を反映しているわけではありません。
+        </li>
+        <li>本ツールの利用により生じた損害について、運営者は一切の責任を負いません。</li>
+        <li>最終的な税務判断は、税理士等の専門家にご確認ください。</li>
+      </ul>
+    </div>
   );
 }
 
@@ -65,10 +95,19 @@ export function PartnerToolShell({
       <main className={`mx-auto ${maxWidthClass} px-4 py-8`}>
         <header className="mb-6">
           {category ? (
-            <span className="mb-2 inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-black text-slate-600">
-              {category}
+            <span className="mb-2 inline-flex flex-wrap items-center gap-2">
+              <span className="inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-black text-slate-600">
+                {category}
+              </span>
+              <span className="inline-block rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-800">
+                ベータ版
+              </span>
             </span>
-          ) : null}
+          ) : (
+            <span className="mb-2 inline-block rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-800">
+              ベータ版
+            </span>
+          )}
           <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-600">{subtitle}</p> : null}
           <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
@@ -86,6 +125,8 @@ export function PartnerToolShell({
             ) : null}
           </div>
         </header>
+
+        <BetaNotice />
 
         {children}
 
@@ -111,7 +152,7 @@ export function PartnerToolShell({
               Powered by {poweredByLabel}
             </a>
             {" · "}
-            計算結果は参考情報です
+            ベータ版・計算結果は参考情報です
           </p>
         </div>
       </footer>
