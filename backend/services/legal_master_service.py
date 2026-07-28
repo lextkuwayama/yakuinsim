@@ -20,14 +20,25 @@ SEED_CSV_PATH = Path(__file__).resolve().parent.parent / "config" / "legal_maste
 
 
 def _legal_master_db_path() -> Path:
-    """Vercel はデプロイ領域が読み取り専用なので /tmp に置く。"""
-    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    """書き込み可能な場所に SQLite を置く。
+
+    Vercel / Lambda はデプロイ領域が読み取り専用なので /tmp を使う。
+    """
+    serverless = bool(
+        os.getenv("VERCEL")
+        or os.getenv("AWS_LAMBDA_FUNCTION_NAME")
+        or Path("/var/task").exists()
+    )
+    if serverless:
         return Path("/tmp") / "sim_officer_legal_master.db"
     storage = Path(__file__).resolve().parent.parent / "storage"
     return storage / "legal_master.db"
 
 
-LEGAL_MASTER_DB_PATH = _legal_master_db_path()
+def _db_path() -> Path:
+    """実行時に毎回解決する（インポート時の環境差を避ける）。"""
+    return _legal_master_db_path()
+
 
 CSV_COLUMNS = [
     "domain",
@@ -56,8 +67,8 @@ def _ensure_schema() -> None:
     global _schema_ready
     if _schema_ready:
         return
-    LEGAL_MASTER_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    _db_path().parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(_db_path()) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS legal_master_entries (
@@ -106,7 +117,7 @@ def init_legal_master_db() -> None:
     if SEED_CSV_PATH.is_file():
         fingerprint = hashlib.sha256(SEED_CSV_PATH.read_bytes()).hexdigest()
 
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS legal_master_meta (
@@ -128,7 +139,7 @@ def init_legal_master_db() -> None:
         return
     if count == 0 or (fingerprint and fingerprint != prev):
         seed_from_file(mode="replace")
-        with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+        with sqlite3.connect(_db_path()) as conn:
             conn.execute(
                 """
                 INSERT INTO legal_master_meta (key, value, updated_at)
@@ -168,7 +179,7 @@ def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
 
 def count_entries() -> int:
     _ensure_schema()
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         row = conn.execute("SELECT COUNT(*) AS c FROM legal_master_entries").fetchone()
     return int(row[0]) if row else 0
 
@@ -199,7 +210,7 @@ def list_entries(
         {where}
         ORDER BY domain, master_key, valid_from DESC
     """
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(sql, params).fetchall()
     return [_row_to_dict(r) for r in rows]
@@ -207,7 +218,7 @@ def list_entries(
 
 def get_entry(entry_id: str) -> dict[str, Any] | None:
     _ensure_schema()
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
             "SELECT * FROM legal_master_entries WHERE id = ?", (entry_id,)
@@ -227,7 +238,7 @@ def lookup_rate(
     if jurisdiction:
         jurisdiction_clause = "AND (jurisdiction IS NULL OR jurisdiction = '' OR jurisdiction = ?)"
         params.append(jurisdiction)
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
             f"""
@@ -396,7 +407,7 @@ def create_entry(data: dict[str, Any]) -> dict[str, Any]:
     if errors:
         raise ValueError("; ".join(errors))
     _ensure_schema()
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         eid = _insert_entry(conn, row)
         conn.commit()
     entry = get_entry(eid)
@@ -414,7 +425,7 @@ def update_entry(entry_id: str, data: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("; ".join(errors))
     _ensure_schema()
     now = _now()
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         conn.execute(
             """
             UPDATE legal_master_entries SET
@@ -447,7 +458,7 @@ def update_entry(entry_id: str, data: dict[str, Any]) -> dict[str, Any]:
 
 def delete_entry(entry_id: str) -> None:
     _ensure_schema()
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         cur = conn.execute("DELETE FROM legal_master_entries WHERE id = ?", (entry_id,))
         conn.commit()
         if cur.rowcount == 0:
@@ -460,7 +471,7 @@ def import_csv_text(text: str, *, mode: ImportMode = "merge") -> dict[str, Any]:
         raise ValueError("; ".join(errors))
     _ensure_schema()
     inserted = 0
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         if mode == "replace":
             conn.execute("DELETE FROM legal_master_entries")
         for row in rows:
@@ -538,7 +549,7 @@ def seed_from_file(path: Path | None = None, *, mode: ImportMode = "merge") -> d
 
 def summary() -> dict[str, Any]:
     _ensure_schema()
-    with sqlite3.connect(LEGAL_MASTER_DB_PATH) as conn:
+    with sqlite3.connect(_db_path()) as conn:
         conn.row_factory = sqlite3.Row
         domain_rows = conn.execute(
             """
@@ -550,6 +561,6 @@ def summary() -> dict[str, Any]:
         ).fetchall()
     return {
         "entry_count": count_entries(),
-        "db_path": str(LEGAL_MASTER_DB_PATH),
+        "db_path": str(_db_path()),
         "domains": [{"domain": r["domain"], "count": r["c"]} for r in domain_rows],
     }
