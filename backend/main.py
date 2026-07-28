@@ -25,7 +25,7 @@ from services.withholding_tax_service import (
 def _cors_origins() -> list[str]:
     raw = os.getenv(
         "SIM_OFFICER_CORS_ORIGINS",
-        "http://localhost:3002,https://sozoku.prolext.jp",
+        "http://localhost:3002,https://sozoku.prolext.jp,https://lextkuwayama.github.io",
     )
     return [o.strip() for o in raw.split(",") if o.strip()]
 
