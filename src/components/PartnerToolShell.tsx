@@ -62,7 +62,14 @@ export function PartnerToolShell({
   children: ReactNode;
   maxWidthClass?: string;
 }) {
-  const { partnerName, partnerSiteUrl, poweredByUrl, poweredByLabel } = getPartnerConfig();
+  const {
+    partnerName,
+    partnerSiteUrl,
+    poweredByUrl,
+    poweredByLabel,
+    consultationUrl,
+    consultationLabel,
+  } = getPartnerConfig();
   const displayName = partnerName ?? "役員報酬シミュレーター";
 
   return (
@@ -131,6 +138,23 @@ export function PartnerToolShell({
         {children}
 
         <Disclaimer />
+
+        {consultationUrl ? (
+          <section className="mt-6 rounded-xl border border-[#B7E4D7] bg-[#F0FFF9] px-4 py-4 text-center shadow-sm">
+            <p className="text-sm font-black text-[#066B4E]">試算結果を踏まえた個別相談も承っています</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#2F6F5C]">
+              具体的な報酬設計や個別事情を踏まえた確認が必要な場合は、LINE からご相談ください。
+            </p>
+            <a
+              href={consultationUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center justify-center rounded-full bg-[#06C755] px-5 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-[#05B54D]"
+            >
+              {consultationLabel}
+            </a>
+          </section>
+        ) : null}
       </main>
 
       <footer className="border-t border-slate-200 bg-white">
