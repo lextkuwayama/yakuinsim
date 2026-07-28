@@ -1,7 +1,11 @@
 # 役員報酬シミュレーター（静的配置先）
 
-`https://sozoku.prolext.jp/sim-officer/` に出すフロントの置き場です。
+`https://sozoku.prolext.jp/sim-officer/` 向けの静的ビルド成果物です。
 
-ここに Next.js の静的エクスポート結果（`index.html` と `_next/` など）を配置します。
+- API: `https://yakuinsim.vercel.app`
+- 生成元: リポジトリルートで `NEXT_PUBLIC_SIM_OFFICER_API_URL=https://yakuinsim.vercel.app npm run build`
+- `.nojekyll` は GitHub Pages が `_next` を無視しないための空ファイル
 
-現状はプレースホルダのみです。ビルド接続後に中身を入れます。
+## 本番 Pages への載せ方
+
+争族の GitHub Pages リポジトリのルートに、この `sim-officer/` フォルダごとコピーして push してください。

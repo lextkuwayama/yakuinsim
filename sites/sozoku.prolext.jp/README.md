@@ -33,18 +33,18 @@ sites/sozoku.prolext.jp/
 4. [ ] `https://sozoku.prolext.jp/` が従来どおり表示されること
 5. [ ] `https://sozoku.prolext.jp/sim-officer/` が開くこと
 
-### B. 本リポジトリ（sim-officer-comp）— フロント静的化（未実装なら次作業）
+### B. 本リポジトリ — フロント静的化
 
-1. [ ] Next.js に `basePath: '/sim-officer'` と静的エクスポート（`output: 'export'`）を設定
-2. [ ] API 呼び出しを rewrite 依存から外し、`NEXT_PUBLIC_SIM_OFFICER_API_URL`（例: `https://xxxx.vercel.app`）直呼びに変更
-3. [ ] `npm run build` の出力を `sites/sozoku.prolext.jp/sim-officer/` へ配置
+1. [x] Next.js に `basePath: '/sim-officer'` と静的エクスポート（`output: 'export'`）を設定
+2. [x] API 呼び出しを `NEXT_PUBLIC_SIM_OFFICER_API_URL` 直呼びに変更
+3. [x] `npm run build` の出力を `sites/sozoku.prolext.jp/sim-officer/` へ配置（API: `https://yakuinsim.vercel.app`）
 
 ### C. Vercel 側（API だけ）
 
-1. [ ] `backend/` を Vercel にデプロイ（Hobby で社内検証可）
-2. [ ] 環境変数 `SIM_OFFICER_CORS_ORIGINS=https://sozoku.prolext.jp`
-3. [ ] `/health` が 200 になること
-4. [ ] 画面から最適化 API が呼べること
+1. [x] `backend/` を Vercel にデプロイ
+2. [x] 環境変数 `SIM_OFFICER_CORS_ORIGINS=https://sozoku.prolext.jp`
+3. [x] `/health` が 200 になること
+4. [ ] 画面から最適化 API が呼べること（Pages 配置後）
 
 ## 注意
 
