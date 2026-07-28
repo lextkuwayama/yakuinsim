@@ -64,12 +64,24 @@ function isEnterpriseRowActive(row: Record<string, unknown>, detail: LocalTaxCal
   return detail.enterprise_bands.some((band) => String(band.income_band ?? "") === rowBand);
 }
 
-function isPercapitaRowActive(row: Record<string, unknown>, detail: LocalTaxCalc): boolean {
-  if (detail.percapita_band && String(row.capital_band ?? "") === String(detail.percapita_band)) {
-    return true;
+function isPercapitaRowActive(
+  row: Record<string, unknown>,
+  detail: LocalTaxCalc,
+  rows: Record<string, unknown>[],
+): boolean {
+  if (detail.percapita_band) {
+    return String(row.capital_band ?? "") === String(detail.percapita_band);
   }
-  const max = row.capital_max;
-  return max == null || detail.capital <= Number(max);
+  let chosen: Record<string, unknown> | null = null;
+  for (const r of rows) {
+    const cap = r.capital_max;
+    if (cap == null || detail.capital <= Number(cap)) {
+      chosen = r;
+      break;
+    }
+  }
+  if (!chosen && rows.length) chosen = rows[rows.length - 1];
+  return chosen === row;
 }
 
 function scrollRowWithinContainer(
@@ -111,7 +123,6 @@ function LocalTaxRefTableBlock({
   resultAmount,
   meta,
   table,
-  activeRow,
   activeCell,
   scrollKey,
   maxHeightClass,
@@ -120,7 +131,6 @@ function LocalTaxRefTableBlock({
   resultAmount?: number | null;
   meta?: string | null;
   table: LocalTaxRefTable;
-  activeRow: (row: Record<string, unknown>) => boolean;
   activeCell: (row: Record<string, unknown>, key: string) => boolean;
   scrollKey?: string | null;
   maxHeightClass?: string;
@@ -172,9 +182,9 @@ function LocalTaxRefTableBlock({
           </thead>
           <tbody>
             {table.rows.map((row, idx) => {
-              const rowHit = activeRow(row);
+              const rowHasHit = table.columns.some((col) => activeCell(row, col.key));
               const assignHighlightRef =
-                rowHit && !firstHighlightAssigned.current
+                rowHasHit && !firstHighlightAssigned.current
                   ? (el: HTMLTableRowElement | null) => {
                       if (el && !firstHighlightAssigned.current) {
                         firstHighlightAssigned.current = true;
@@ -183,9 +193,13 @@ function LocalTaxRefTableBlock({
                     }
                   : undefined;
               return (
-                <tr key={idx} ref={assignHighlightRef} className={rowHit ? toolsTheme.tableRowHit : "odd:bg-slate-50/50"}>
+                <tr
+                  key={idx}
+                  ref={assignHighlightRef}
+                  className={rowHasHit ? toolsTheme.tableRowHit : "odd:bg-slate-50/50"}
+                >
                   {table.columns.map((col) => {
-                    const cellHit = rowHit && activeCell(row, col.key);
+                    const cellHit = activeCell(row, col.key);
                     return (
                       <td
                         key={col.key}
@@ -507,13 +521,13 @@ export function ExecutiveCompReferenceTables({
               table={localTables.resident_levy}
               scrollKey={localTableScrollKey}
               maxHeightClass="max-h-[280px]"
-              activeRow={(row) =>
-                !!localTaxDetail && String(row.jurisdiction ?? "") === localTaxDetail.jurisdiction
-              }
-              activeCell={(_, key) =>
-                !!localTaxDetail &&
-                key === (localTaxDetail.use_excess_rate ? "excess_rate" : "standard_rate")
-              }
+              activeCell={(row, key) => {
+                if (!localTaxDetail) return false;
+                if (String(row.jurisdiction ?? "") !== localTaxDetail.jurisdiction) return false;
+                return (
+                  key === (localTaxDetail.use_excess_rate ? "excess_rate" : "standard_rate")
+                );
+              }}
             />
             <LocalTaxRefTableBlock
               title="法人住民税 均等割"
@@ -522,13 +536,16 @@ export function ExecutiveCompReferenceTables({
               table={localTables.percapita}
               scrollKey={localTableScrollKey}
               maxHeightClass="max-h-[360px]"
-              activeRow={(row) => (localTaxDetail ? isPercapitaRowActive(row, localTaxDetail) : false)}
-              activeCell={(_, key) =>
-                localTaxDetail
-                  ? key === "pref" ||
-                    key === (localTaxDetail.employees > 50 ? "city_over50" : "city_le50")
-                  : false
-              }
+              activeCell={(row, key) => {
+                if (!localTaxDetail) return false;
+                if (!isPercapitaRowActive(row, localTaxDetail, localTables.percapita.rows)) {
+                  return false;
+                }
+                return (
+                  key === "pref" ||
+                  key === (localTaxDetail.employees > 50 ? "city_over50" : "city_le50")
+                );
+              }}
             />
             <LocalTaxRefTableBlock
               title="法人事業税 所得割"
@@ -537,12 +554,13 @@ export function ExecutiveCompReferenceTables({
               table={localTables.enterprise}
               scrollKey={localTableScrollKey}
               maxHeightClass="max-h-[360px]"
-              activeRow={(row) => (localTaxDetail ? isEnterpriseRowActive(row, localTaxDetail) : false)}
-              activeCell={(_, key) =>
-                localTaxDetail
-                  ? key === (localTaxDetail.use_excess_rate ? "excess_rate" : "standard_rate")
-                  : false
-              }
+              activeCell={(row, key) => {
+                if (!localTaxDetail) return false;
+                if (!isEnterpriseRowActive(row, localTaxDetail)) return false;
+                return (
+                  key === (localTaxDetail.use_excess_rate ? "excess_rate" : "standard_rate")
+                );
+              }}
             />
             {corporateBreakdown ? (
               <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-slate-600">
