@@ -21,15 +21,22 @@ sites/sozoku.prolext.jp/
   README.md           ← 本手順
 ```
 
-本番の GitHub Pages リポジトリへは、この中身をそのまま（または同等の配置で）デプロイします。
+本番の GitHub Pages は **このリポジトリ（[yakuinsim](https://github.com/lextkuwayama/yakuinsim)）** から Actions でデプロイします。
+
+### GitHub Pages の設定（初回のみ）
+
+1. リポジトリ → **Settings → Pages**
+2. **Build and deployment → Source:** `GitHub Actions` を選択
+3. **Custom domain:** `sozoku.prolext.jp`（`CNAME` ファイルで自動設定される場合あり）
+4. `main` に push すると `.github/workflows/deploy-pages.yml` が `sites/sozoku.prolext.jp/` を公開
 
 ## やるべきことチェックリスト
 
 ### A. GitHub Pages 側（このフォルダ）
 
-1. [ ] 既存の Pages リポジトリのルートに `index.html`（争族）があることを確認
-2. [ ] ルートに `sim-officer/` ディレクトリを追加
-3. [ ] 下記 B の静的ビルド成果を `sim-officer/` にコピーして push
+1. [x] `index.html`（争族）と `sim-officer/` をこのフォルダに配置
+2. [x] GitHub Actions ワークフロー（`.github/workflows/deploy-pages.yml`）
+3. [ ] Settings → Pages で Source を **GitHub Actions** に変更
 4. [ ] `https://sozoku.prolext.jp/` が従来どおり表示されること
 5. [ ] `https://sozoku.prolext.jp/sim-officer/` が開くこと
 
@@ -49,5 +56,5 @@ sites/sozoku.prolext.jp/
 ## 注意
 
 - GitHub Pages は静的配信のみ。`/sim-officer/api/...` を同じオリジンで FastAPI に流すことはできません。API は `*.vercel.app` 直呼びが前提です。
-- 争族 LP（`index.html`）はこのリポジトリ内の作業用コピーです。本番 Pages リポジトリが別なら、そちらのルート配置を正として同期してください。
+- 争族 LP（`index.html`）は `sites/sozoku.prolext.jp/` に置いています。Pages の正本は [yakuinsim](https://github.com/lextkuwayama/yakuinsim) リポジトリです。
 - 来月の本格公開（商用）前に Vercel は Pro への移行を検討してください（Hobby は非商用のみ）。
