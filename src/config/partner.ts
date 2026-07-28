@@ -1,3 +1,5 @@
+import packageJson from "../../package.json";
+
 /** パートナー／スタンドアロン公開用設定（env で上書き）。 */
 
 export type PartnerConfig = {
@@ -7,6 +9,7 @@ export type PartnerConfig = {
   poweredByLabel: string;
   consultationUrl: string | null;
   consultationLabel: string;
+  appVersion: string;
 };
 
 export function getPartnerConfig(): PartnerConfig {
@@ -22,5 +25,7 @@ export function getPartnerConfig(): PartnerConfig {
       "https://u.prolextol.jp/line/open/RkzL7KSs9y4m?mtid=uqe1XZeM0XEo",
     consultationLabel:
       process.env.NEXT_PUBLIC_EXEC_COMP_CONSULTATION_LABEL?.trim() || "個別試算・相談はこちら",
+    appVersion:
+      process.env.NEXT_PUBLIC_EXEC_COMP_APP_VERSION?.trim() || `v${packageJson.version}`,
   };
 }

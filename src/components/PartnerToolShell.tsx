@@ -69,6 +69,7 @@ export function PartnerToolShell({
     poweredByLabel,
     consultationUrl,
     consultationLabel,
+    appVersion,
   } = getPartnerConfig();
   const displayName = partnerName ?? "役員報酬シミュレーター";
 
@@ -177,6 +178,8 @@ export function PartnerToolShell({
             </a>
             {" · "}
             ベータ版・計算結果は参考情報です
+            {" · "}
+            {appVersion}
           </p>
         </div>
       </footer>
