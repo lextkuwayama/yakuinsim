@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+     <script>
+            !function(f, b, e, v, n, t, s) {
+                if (f.fbq)
+                    return;
+                n = f.fbq = function() {
+                    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+                }
+                ;
+                if (!f._fbq)
+                    f._fbq = n;
+                n.push = n;
+                n.loaded = !0;
+                n.version = '2.0';
+                n.queue = [];
+                t = b.createElement(e);
+                t.async = !0;
+                t.src = v;
+                s = b.getElementsByTagName(e)[0];
+                s.parentNode.insertBefore(t, s)
+            }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '2221248565353814');
+            fbq('track', 'PageView');
+        </script>
+        <noscript>
+            <img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2221248565353814&ev=PageView&noscript=1"/>
+        </noscript>
+        <meta name="google-site-verification" content="Zbg4CHJen4F7GSIsE32R5uKJtbzuY_nnY_jvKp-ca4M" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>「争族」危険度＆資産最大化シミュレーション</title>
+<style>
+    body {
+        font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+        background-color: #f8f9fa;
+        color: #333;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    h2 {
+        color: #172758;
+        text-align: center;
+        font-size: 1.4rem;
+        margin-top: 0;
+        border-bottom: 3px solid #d6ae3c;
+        padding-bottom: 10px;
+    }
+    .form-group {
+        margin-bottom: 25px;
+    }
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+        color: #172758;
+    }
+    select {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.1rem;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fdfdfd;
+        box-sizing: border-box;
+    }
+    .btn-submit {
+        display: block;
+        width: 100%;
+        padding: 18px;
+        background-color: #172758;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-align: center;
+        transition: background 0.3s;
+        margin-top: 30px;
+    }
+    .btn-submit:hover {
+        background-color: #2a4185;
+    }
+    
+    /* 結果画面（STEP2）のスタイル */
+    #step2 {
+        display: none;
+        text-align: center;
+    }
+    .alert-box {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    .danger-level {
+        font-size: 1.8rem;
+        color: #dc3545;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    .upside-box {
+        background-color: #fcfaf2;
+        border: 2px solid #d6ae3c;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 0; /* 下の余白は別の要素でとるため0に */
+    }
+    .upside-amount {
+        font-size: 2.2rem;
+        color: #c0392b;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    /* 算出根拠と注意書きをまとめる白い枠のスタイル（点線なし） */
+    .reason-box {
+        background: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #eee;
+        margin-top: 15px;
+        text-align: left;
+    }
+    .reason-box p#upsideReasonDisplay {
+        font-size: 0.9rem;
+        color: #555;
+        margin: 0 0 10px 0; /* 注意書きとの間に少しだけ余白 */
+        line-height: 1.5;
+    }
+    .reason-box .small-note {
+        font-size: 0.8rem;
+        color: #888;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* 安心感訴求ボックス */
+    .trust-box {
+        background-color: #f0f4f8;
+        border-left: 5px solid #172758;
+        padding: 15px;
+        text-align: left;
+        border-radius: 0 5px 5px 0;
+        margin-bottom: 25px;
+        font-size: 0.95rem;
+    }
+    .trust-box ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #444;
+    }
+    .trust-box li {
+        margin-bottom: 5px;
+    }
+
+    /* LINE登録ボタン用 */
+    .btn-form {
+        display: block;
+        width: 100%;
+        padding: 20px;
+        background-color: #06C755;
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.4rem;
+        font-weight: bold;
+        text-decoration: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-sizing: border-box;
+        transition: background 0.3s;
+        text-align: center;
+    }
+    .btn-form:hover {
+        background-color: #05b34c;
+    }
+
+    .powered-by {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 35px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+    }
+    .powered-by span {
+        color: #172758;
+        font-weight: bold;
+    }
+    .footer-links {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 0.8rem;
+    }
+    .footer-links a {
+        color: #666;
+        text-decoration: none;
+        margin: 0 10px;
+        transition: color 0.2s;
+    }
+    .footer-links a:hover {
+        color: #172758;
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div id="step1">
+        <h2>30秒でわかる！<br>「争族」危険度チェック</h2>
+        <p style="text-align:center; font-size:1rem; color:#555;">親御さんのご資産について、ざっくりと教えてください。</p>
+        
+        <div class="form-group">
+            <label for="heirs">1. 想定される相続人は何人ですか？</label>
+            <select id="heirs">
+                <option value="1">1人</option>
+                <option value="2" selected>2人</option>
+                <option value="3">3人</option>
+                <option value="4">4人以上</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="realEstate">2. 不動産（ご自宅や土地）の概算価値は？</label>
+            <select id="realEstate">
+                <option value="3000">3,000万円未満</option>
+                <option value="5000" selected>3,000万〜5,000万円</option>
+                <option value="10000">5,000万〜1億円</option>
+                <option value="30000">1億円〜3億円</option>
+                <option value="50000">3億円以上</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="cash">3. 現金・預貯金の概算額は？</label>
+            <select id="cash">
+                <option value="500">500万円未満</option>
+                <option value="1000">500万〜1,000万円</option>
+                <option value="3000" selected>1,000万〜3,000万円</option>
+                <option value="5000">3,000万〜5,000万円</option>
+                <option value="10000">5,000万円以上</option>
+            </select>
+        </div>
+
+        <button class="btn-submit" onclick="calculateResult()">危険度と対策効果を見る</button>
+    </div>
+
+    <div id="step2">
+        <h2>簡易シミュレーション結果</h2>
+        
+        <div class="alert-box">
+            <p style="margin:0; font-weight:bold;">不動産が分けられず揉める可能性</p>
+            <div class="danger-level" id="dangerLevelText">争族危険度：高</div>
+            <p id="dangerReason" style="font-size:0.95rem; text-align:left; margin-top:10px;"></p>
+        </div>
+
+        <div class="upside-box">
+            <p style="margin-top:0; font-weight:bold; font-size:1.1rem; color:#172758;">弊社の【不動産×保険】対策プランなら…</p>
+            <p style="font-size:1rem; margin-bottom:5px;">何もしない場合と比べて、手残り資産が</p>
+            <div class="upside-amount">最大 約<span id="increaseAmount">--</span>万円</div>
+            <p style="font-size:1.1rem; font-weight:bold; margin-bottom:0; color:#172758;">増える（守れる）可能性があります！</p>
+            
+            <div class="reason-box">
+                <p id="upsideReasonDisplay"></p>
+                <p class="small-note">※上記は「相続税の早見表」の基礎控除と、生命保険の非課税枠、不動産評価減の概算ロジックを組み合わせた結果であり、実際の税額や資産増減を保証するものではありません。</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 70px; margin-bottom: 30px; text-align: center;">
+            <h3 style="font-size: 1.6rem; color: #000; margin-top: 0; margin-bottom: 15px; font-weight: bold;">さらに詳しい診断をご希望の方へ</h3>
+            <p style="font-size: 1.15rem; font-weight: bold; line-height: 1.6; color: #000; margin-bottom: 15px;">
+                現在の状況をLINEでお送りいただいた方に<br>
+                <span style="color: #c0392b;">税理士監修のオーダーメイド対策プランを</span><br>
+                無料作成します
+            </p>
+            <div style="font-size: 1.5rem; color: #000; margin-bottom: 15px;">▼</div>
+            <a href="#" target="_blank" rel="noopener noreferrer" class="btn-form" id="ctaButton">
+                LINEで対策レポートを受け取る（無料）
+            </a>
+        </div>
+
+        <div class="trust-box">
+            <p style="margin-top:0; font-weight:bold; color:#172758;">【ご安心ください】</p>
+            <ul>
+                <li><strong>親御様に知られることはありません</strong><br><span style="font-size:0.85em;">（ご相談者の同意なく連絡することは一切ございません）</span></li>
+                <li><strong>しつこい営業電話はいたしません</strong><br><span style="font-size:0.85em;">（ご希望の連絡方法でのみご案内します）</span></li>
+                <li><strong>個人情報は厳重に管理します</strong><br><span style="font-size:0.85em;">（税理士の守秘義務により保護されます）</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="powered-by">
+        Powered by <span>株式会社PROLEXT</span> & <span>PROLEXT税理士法人</span>
+    </div>
+
+    <div class="footer-links">
+        <a href="https://prolext.jp/company" target="_blank" rel="noopener noreferrer">会社概要</a>
+        <span>|</span>
+        <a href="https://prolext.jp/privacypolicy" target="_blank" rel="noopener noreferrer">プライバシーポリシー</a>
+    </div>
+</div>
+
+<script>
+function getTaxRateAndDeduction(amount) {
+    if (amount <= 1000) return { rate: 0.10, deduction: 0 };
+    if (amount <= 3000) return { rate: 0.15, deduction: 50 };
+    if (amount <= 5000) return { rate: 0.20, deduction: 200 };
+    if (amount <= 10000) return { rate: 0.30, deduction: 700 };
+    if (amount <= 20000) return { rate: 0.40, deduction: 1700 };
+    if (amount <= 30000) return { rate: 0.45, deduction: 2700 };
+    return { rate: 0.55, deduction: 5700 };
+}
+
+function calculateTotalTax(assets, heirs) {
+    const basicExemption = 3000 + (heirs * 600);
+    const taxableEstate = assets - basicExemption;
+
+    if (taxableEstate <= 0) return 0;
+
+    const statutoryShare = taxableEstate / heirs; 
+    const { rate, deduction } = getTaxRateAndDeduction(statutoryShare);
+    const taxPerHeir = (statutoryShare * rate) - deduction;
+    
+    return taxPerHeir * heirs;
+}
+
+function calculateResult() {
+    const heirs = parseInt(document.getElementById('heirs').value);
+    const realEstate = parseInt(document.getElementById('realEstate').value);
+    const cash = parseInt(document.getElementById('cash').value);
+    
+    const totalAssets = realEstate + cash;
+    const realEstateRatio = realEstate / totalAssets;
+    
+    let dangerLevel = "低";
+    let dangerReason = "現金が十分にあり、分割しやすい状態です。ただし、税金対策による資産増加の余地があります。";
+    
+    if (heirs > 1) {
+        if (realEstateRatio > 0.6 || cash < 1000) {
+            dangerLevel = "高";
+            dangerReason = "財産に占める不動産の割合が高く、兄弟間で平等に分けるための現金（代償金）が不足し、揉める可能性が非常に高い状態です。";
+        } else if (realEstateRatio > 0.4) {
+            dangerLevel = "中";
+            dangerReason = "不動産と現金のバランスに注意が必要です。事前の分割対策をしておかないと、納税資金がショートする恐れがあります。";
+        }
+    } else {
+        dangerReason = "相続人がお一人のため分割で揉める心配はありませんが、多額の相続税が発生し、不動産を手放すリスクがあります。";
+    }
+
+    let upsideAmount = 0;
+    let upsideReasonText = "";
+
+    const originalTax = calculateTotalTax(totalAssets, heirs);
+
+    if (originalTax === 0) {
+        upsideAmount = Math.floor(realEstate * 0.05);
+        upsideReasonText = "【算出根拠】相続税はかからない見込みですが、現状の不動産をより収益性の高いものに組み換えるなど、将来的な手残りを増やすご提案が可能です。";
+    } else {
+        const insuranceDeduction = Math.min(cash, heirs * 500);
+        const realEstateCompression = Math.floor(realEstate * 0.3);
+        const newTotalAssets = totalAssets - insuranceDeduction - realEstateCompression;
+
+        const newTax = calculateTotalTax(newTotalAssets, heirs);
+
+        upsideAmount = Math.floor(originalTax - newTax);
+
+        if(upsideAmount <= 0) upsideAmount = 0;
+
+        upsideReasonText = `【算出根拠】生命保険の非課税枠のフル活用（最大${insuranceDeduction}万円）と、不動産の評価減を組み合わせ、「相続税の速算表」に基づき算出された想定節税額です。`;
+    }
+
+    document.getElementById('dangerLevelText').innerText = "争族危険度：" + dangerLevel;
+    document.getElementById('dangerReason').innerText = dangerReason;
+    document.getElementById('increaseAmount').innerText = upsideAmount.toLocaleString();
+    document.getElementById('upsideReasonDisplay').innerText = upsideReasonText;
+
+    const ctaButton = document.getElementById('ctaButton');
+    
+    // 【URL振り分け】リスクに応じてLINEの遷移先を変更
+    let targetUrl = "https://u.prolextol.jp/line/open/ALI7EnIy8Z4N"; // リスク低のURL
+    if (dangerLevel === "高") {
+        targetUrl = "https://u.prolextol.jp/line/open/uB4siUjJ6S8y"; // リスク高のURL
+    } else if (dangerLevel === "中") {
+        targetUrl = "https://u.prolextol.jp/line/open/IJjqXhzuQ1wE"; // リスク中のURL
+    }
+    ctaButton.href = targetUrl;
+
+    ctaButton.onclick = function() {
+        if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+                content_name: 'Inheritance_Simulation_LP',
+                predicted_risk: dangerLevel
+            });
+        }
+    };
+
+    document.getElementById('step1').style.display = 'none';
+    document.getElementById('step2').style.display = 'block';
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>

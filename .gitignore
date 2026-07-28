@@ -1,0 +1,13 @@
+﻿node_modules/
+.next/
+out/
+backend/.venv/
+backend/storage/
+backend/**/__pycache__/
+*.pyc
+*.db
+*.sqlite
+.env
+.env.local
+*.log
+tsconfig.tsbuildinfo

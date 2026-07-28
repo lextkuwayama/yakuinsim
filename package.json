@@ -1,0 +1,30 @@
+{
+  "name": "sim-officer-comp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "役員報酬最適化シミュレーター（フロント＋API・単体起動用）",
+  "scripts": {
+    "dev": "next dev -p 3002 --config next.config.dev.mjs",
+    "build": "next build",
+    "build:static": "NEXT_PUBLIC_SIM_OFFICER_API_URL=${NEXT_PUBLIC_SIM_OFFICER_API_URL} next build",
+    "start": "next start -p 3002",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "lucide-react": "^0.378.0",
+    "next": "^14.2.3",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
