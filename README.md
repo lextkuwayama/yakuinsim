@@ -256,6 +256,13 @@ npm run dev
 
 時点（`valid_from` / `valid_to` や `as_of` / `fiscal_year_start`）で有効版を解決します。ハードコードせずマスタから読む設計です。
 
+**更新手順（ローカル編集 → コマンド一発 → git push）:** [docs/master-data-update.md](docs/master-data-update.md)
+
+```powershell
+.\update-masters.ps1          # 検証 + ローカル DB 再投入
+npm run update-masters        # 同上
+```
+
 ---
 
 ## 技術スタック

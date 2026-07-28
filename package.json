@@ -8,7 +8,8 @@
     "build": "next build",
     "build:static": "NEXT_PUBLIC_SIM_OFFICER_API_URL=${NEXT_PUBLIC_SIM_OFFICER_API_URL} next build",
     "start": "next start -p 3002",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update-masters": "powershell -ExecutionPolicy Bypass -File update-masters.ps1"
   },
   "dependencies": {
     "lucide-react": "^0.378.0",

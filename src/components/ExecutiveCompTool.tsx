@@ -32,7 +32,7 @@ export function ExecutiveCompTool() {
   const shellProps = {
     title: "役員報酬 最適化シミュレーター",
     subtitle:
-      "会社の利益を固定し、役員報酬を振ったときの「法人税＋所得税＋住民税＋社会保険」の合計負担が最小になる月額を探索します。計算に使う法定マスタもこのページにすべて載せています。",
+      "会社の利益を固定し、役員報酬を振ったときの「法人税＋所得税＋住民税＋社会保険」の合計負担が最小になる月額を探索します。",
     category: "法人税・所得税・社保",
     sourceUrl: "https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5759.htm",
     sourceLabel: "国税庁 No.5759 ほか",
