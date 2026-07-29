@@ -3,6 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   output: "export",
   basePath: "/sim-officer",
+  images: { unoptimized: true },
+  env: {
+    NEXT_PUBLIC_BASE_PATH: "/sim-officer",
+  },
 
   // 静的エクスポートでは rewrites は使えない。
   // ローカル開発で API プロキシが必要な場合は output: "export" をコメントアウトし、

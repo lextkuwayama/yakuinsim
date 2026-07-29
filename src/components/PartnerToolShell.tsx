@@ -5,6 +5,12 @@ import { getPartnerConfig } from "@/config/partner";
 import { SOURCE_LINKS } from "@/config/seo";
 import { toolsTheme } from "@/lib/theme";
 
+function assetPath(path: string): string {
+  const base = (process.env.NEXT_PUBLIC_BASE_PATH || "").replace(/\/$/, "");
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${normalized}`;
+}
+
 function BetaNotice() {
   return (
     <div
@@ -68,26 +74,38 @@ export function PartnerToolShell({
     <div className="min-h-screen bg-slate-100 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
         <div className={`mx-auto flex ${maxWidthClass} items-center justify-between gap-4 px-4 py-3`}>
-          {partnerSiteUrl ? (
+          <div className="flex min-w-0 items-center gap-3">
             <a
-              href={partnerSiteUrl}
+              href={poweredByUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-black text-slate-900 hover:text-blue-700"
+              className="inline-flex shrink-0 items-center rounded-md bg-black px-2 py-1.5 transition hover:opacity-90"
+              aria-label={`${poweredByLabel} 公式サイトへ`}
             >
-              {displayName}
+              <img
+                src={assetPath("/prolext-logo.png")}
+                alt={poweredByLabel}
+                width={150}
+                height={42}
+                className="h-7 w-auto object-contain sm:h-8"
+              />
             </a>
-          ) : (
-            <span className="text-sm font-black text-slate-900">{displayName}</span>
-          )}
-          <a
-            href={poweredByUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="text-[10px] font-bold text-slate-400 hover:text-slate-600"
-          >
+            {partnerSiteUrl ? (
+              <a
+                href={partnerSiteUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="truncate text-sm font-black text-slate-900 hover:text-blue-700"
+              >
+                {displayName}
+              </a>
+            ) : (
+              <span className="truncate text-sm font-black text-slate-900">{displayName}</span>
+            )}
+          </div>
+          <span className="hidden text-[10px] font-bold text-slate-400 sm:inline">
             Powered by {poweredByLabel}
-          </a>
+          </span>
         </div>
       </header>
 
