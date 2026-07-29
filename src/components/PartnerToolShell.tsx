@@ -1,6 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
+import { LineConsultationCta } from "@/components/LineConsultationCta";
 import { getPartnerConfig } from "@/config/partner";
+import { SOURCE_LINKS } from "@/config/seo";
 import { toolsTheme } from "@/lib/theme";
 
 function BetaNotice() {
@@ -47,8 +49,6 @@ export function PartnerToolShell({
   title,
   subtitle,
   category,
-  sourceUrl,
-  sourceLabel = "国税庁",
   asOf,
   children,
   maxWidthClass = "max-w-6xl",
@@ -56,21 +56,12 @@ export function PartnerToolShell({
   title: string;
   subtitle?: string;
   category?: string;
-  sourceUrl?: string;
-  sourceLabel?: string;
   asOf?: string;
   children: ReactNode;
   maxWidthClass?: string;
 }) {
-  const {
-    partnerName,
-    partnerSiteUrl,
-    poweredByUrl,
-    poweredByLabel,
-    consultationUrl,
-    consultationLabel,
-    appVersion,
-  } = getPartnerConfig();
+  const { partnerName, partnerSiteUrl, poweredByUrl, poweredByLabel, consultationUrl, appVersion } =
+    getPartnerConfig();
   const displayName = partnerName ?? "役員報酬シミュレーター";
 
   return (
@@ -118,19 +109,20 @@ export function PartnerToolShell({
           )}
           <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-600">{subtitle}</p> : null}
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
             {asOf ? <span>適用時点: {asOf}</span> : null}
-            {sourceUrl ? (
+            {SOURCE_LINKS.map((s) => (
               <a
-                href={sourceUrl}
+                key={s.url}
+                href={s.url}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 font-bold text-blue-600 hover:text-blue-700"
               >
                 <ExternalLink className="h-3 w-3" />
-                出典: {sourceLabel}
+                {s.label}
               </a>
-            ) : null}
+            ))}
           </div>
         </header>
 
@@ -140,22 +132,7 @@ export function PartnerToolShell({
 
         <Disclaimer />
 
-        {consultationUrl ? (
-          <section className="mt-6 rounded-xl border border-[#B7E4D7] bg-[#F0FFF9] px-4 py-4 text-center shadow-sm">
-            <p className="text-sm font-black text-[#066B4E]">試算結果を踏まえた個別相談も承っています</p>
-            <p className="mt-1 text-xs leading-relaxed text-[#2F6F5C]">
-              具体的な報酬設計や個別事情を踏まえた確認が必要な場合は、LINE からご相談ください。
-            </p>
-            <a
-              href={consultationUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-3 inline-flex items-center justify-center rounded-full bg-[#06C755] px-5 py-2.5 text-sm font-black text-white shadow-sm transition hover:bg-[#05B54D]"
-            >
-              {consultationLabel}
-            </a>
-          </section>
-        ) : null}
+        {consultationUrl ? <LineConsultationCta className="mt-6" /> : null}
       </main>
 
       <footer className="border-t border-slate-200 bg-white">

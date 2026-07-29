@@ -32,6 +32,9 @@ export function NumInput({
       id={id}
       type={formatWithCommas ? "text" : "number"}
       inputMode="numeric"
+      pattern="[0-9,]*"
+      autoComplete="off"
+      enterKeyHint="done"
       min={min}
       value={text}
       onChange={(e) => {

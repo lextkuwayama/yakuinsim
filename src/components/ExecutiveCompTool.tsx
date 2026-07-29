@@ -7,6 +7,8 @@ import {
   ExecutiveCompReferenceTables,
   ExecutiveCompSectionNav,
 } from "@/components/ExecutiveCompReferenceTables";
+import { LineConsultationCta } from "@/components/LineConsultationCta";
+import { SeoContent } from "@/components/SeoContent";
 import {
   STEP_OPTIONS,
   useExecutiveCompSimulation,
@@ -32,10 +34,8 @@ export function ExecutiveCompTool() {
   const shellProps = {
     title: "役員報酬 最適化シミュレーター",
     subtitle:
-      "会社の利益を固定し、役員報酬を振ったときの「法人税＋所得税＋住民税＋社会保険」の合計負担が最小になる月額を探索します。",
+      "会社の利益を入力するだけで、法人税・所得税・住民税・社会保険料の合計負担が最小になる役員報酬（月額）を無料でシミュレーションします。",
     category: "法人税・所得税・社保",
-    sourceUrl: "https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5759.htm",
-    sourceLabel: "国税庁 No.5759 ほか",
     asOf: sim.result?.as_of ?? undefined,
     maxWidthClass: "max-w-6xl" as const,
   };
@@ -313,6 +313,13 @@ export function ExecutiveCompTool() {
           <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
             役員報酬は毎月定額（賞与なし）の前提です。社会保険料は協会けんぽの等級表経路で算出します。40〜64歳は介護保険を加算し、70歳以上は厚生年金、75歳以上は健康保険を対象外とします。法人側は法人税・地方税、個人側は給与所得控除・基礎控除・社会保険料控除を考慮します。
           </p>
+
+          {result && !dirty ? (
+            <LineConsultationCta
+              className="mt-4"
+              highlightYen={yen(result.optimal.monthly_salary)}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -410,6 +417,8 @@ export function ExecutiveCompTool() {
           </ul>
         </div>
       ) : null}
+
+      <SeoContent />
 
       <ExecutiveCompReferenceTables
         fyStart={sim.fyStart}

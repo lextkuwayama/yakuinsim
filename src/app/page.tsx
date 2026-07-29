@@ -1,5 +1,12 @@
 import { ExecutiveCompTool } from "@/components/ExecutiveCompTool";
+import { AppJsonLd, FaqJsonLd } from "@/components/SeoContent";
 
 export default function OfficerCompPage() {
-  return <ExecutiveCompTool />;
+  return (
+    <>
+      <FaqJsonLd />
+      <AppJsonLd />
+      <ExecutiveCompTool />
+    </>
+  );
 }

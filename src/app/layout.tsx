@@ -1,15 +1,27 @@
 import type { Metadata } from "next";
 import { getPartnerConfig } from "@/config/partner";
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_TITLE } from "@/config/seo";
 import "./globals.css";
 
 const { partnerName } = getPartnerConfig();
-const titleSuffix = partnerName ? ` — ${partnerName}` : "";
+const title = partnerName ? `${SITE_TITLE} — ${partnerName}` : SITE_TITLE;
 
 export const metadata: Metadata = {
-  title: `役員報酬 最適化シミュレーター（ベータ版）${titleSuffix}`,
-  description:
-    "【ベータ版】会社の利益を固定し、役員報酬を変えたときの法人税・所得税・住民税・社会保険料の合計負担が最小になる月額を試算。結果は参考情報です。",
+  title,
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
   robots: { index: true, follow: true },
+  openGraph: {
+    title,
+    description: SITE_DESCRIPTION,
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

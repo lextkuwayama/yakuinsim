@@ -19,6 +19,9 @@ import {
 
 const SECTIONS = [
   { id: "sim", label: "シミュレーター" },
+  { id: "howto", label: "使い方" },
+  { id: "why", label: "最適化の理由" },
+  { id: "faq", label: "FAQ" },
   { id: "ref-corporate", label: "法人税" },
   { id: "ref-local", label: "地方税" },
   { id: "ref-employment", label: "給与所得控除" },
