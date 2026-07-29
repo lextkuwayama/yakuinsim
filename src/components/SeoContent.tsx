@@ -4,10 +4,6 @@ import { getPartnerConfig } from "@/config/partner";
 
 /** 検索エンジン向けの解説テキスト（使い方・背景・FAQ・提供元）。 */
 export function SeoContent() {
-  const { poweredByUrl, poweredByLabel, partnerName, partnerSiteUrl } = getPartnerConfig();
-  const providerName = partnerName || poweredByLabel;
-  const providerUrl = partnerSiteUrl || poweredByUrl;
-
   return (
     <div className="mt-10 space-y-8 text-slate-700">
       <section id="howto" className="scroll-mt-16 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -97,53 +93,22 @@ export function SeoContent() {
       </section>
 
       <section id="about" className="scroll-mt-16 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-lg font-black text-slate-900">提供・出典</h2>
-        <div className="mt-3 text-sm leading-relaxed text-slate-600">
-          <p>
-            本シミュレーターは{" "}
-            {partnerName ? (
+        <h2 className="text-lg font-black text-slate-900">出典</h2>
+        <ul className="mt-3 space-y-1.5">
+          {SOURCE_LINKS.map((s) => (
+            <li key={s.url}>
               <a
-                href={providerUrl}
+                href={s.url}
                 target="_blank"
                 rel="noreferrer"
-                className="font-bold text-blue-600 hover:text-blue-700"
+                className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
               >
-                {providerName}
+                <ExternalLink className="h-3 w-3" />
+                {s.label}
               </a>
-            ) : (
-              <>
-                <a
-                  href={COMPANY.siteUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-bold text-blue-600 hover:text-blue-700"
-                >
-                  {COMPANY.legalName}
-                </a>
-                {" 及び "}
-                <span className="font-bold text-slate-800">{COMPANY.taxFirmName}</span>
-              </>
-            )}{" "}
-            が提供する無料の役員報酬最適化ツールです。税務・社会保険の専門アドバイスに代わるものではありません。
-            詳細な最適化は個別相談をご利用ください。
-          </p>
-          <p className="mt-3 text-xs font-black text-slate-500">主な出典</p>
-          <ul className="mt-2 space-y-1.5">
-            {SOURCE_LINKS.map((s) => (
-              <li key={s.url}>
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  {s.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

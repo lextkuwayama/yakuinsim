@@ -1,6 +1,6 @@
 {
   "name": "sim-officer-comp",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": true,
   "description": "役員報酬最適化シミュレーター（フロント＋API・単体起動用）",
   "scripts": {
