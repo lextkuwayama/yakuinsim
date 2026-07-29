@@ -79,11 +79,11 @@ export function PartnerToolShell({
               href={poweredByUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex shrink-0 items-center gap-2 rounded-md bg-white px-1.5 py-1 transition hover:opacity-80"
+              className="inline-flex shrink-0 items-center gap-2 bg-transparent py-1 transition hover:opacity-80"
               aria-label={`${poweredByLabel} 公式サイトへ`}
             >
               <img
-                src={assetPath("/prolext-mark.png")}
+                src={assetPath("/prolext-mark-gold-v2.png")}
                 alt=""
                 width={36}
                 height={40}
