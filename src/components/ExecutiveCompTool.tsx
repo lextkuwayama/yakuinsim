@@ -317,6 +317,7 @@ export function ExecutiveCompTool() {
           {result && !dirty ? (
             <LineConsultationCta
               className="mt-4"
+              variant="result"
               highlightYen={yen(result.optimal.monthly_salary)}
             />
           ) : null}

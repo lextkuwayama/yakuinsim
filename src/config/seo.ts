@@ -1,10 +1,10 @@
 /** SEO / FAQ コンテンツ（静的出力でも HTML に載せる）。 */
 
 export const SITE_TITLE =
-  "【2026年最新】役員報酬シミュレーター｜法人税・所得税・社会保険料の最適化（無料）";
+  "【無料】役員報酬シミュレーター｜税金・社会保険料を最適化して手取りを最大化";
 
 export const SITE_DESCRIPTION =
-  "会社の利益を入力するだけで、法人税・所得税・住民税・社会保険料の合計負担が最小になる「最適な役員報酬」を自動計算する無料シミュレーターです。手取りを最大化する役員報酬の決め方にお悩みの方へ。税制・協会けんぽの最新料率に対応。";
+  "会社の利益を入力するだけで、法人税・所得税・社会保険料の合計負担が最小になる最適な役員報酬を自動計算する無料シミュレーターです。登録不要ですぐに使えます。";
 
 export const SITE_KEYWORDS = [
   "役員報酬 シミュレーション",
@@ -19,6 +19,9 @@ export const SITE_KEYWORDS = [
 
 export const COMPANY = {
   legalName: "株式会社PROLEXT",
+  taxFirmName: "PROLEXT税理士法人",
+  /** 提供元の表記（会社概要・出典・構造化データ用） */
+  providerLabel: "株式会社PROLEXT 及び PROLEXT税理士法人",
   brandName: "PROLEXT",
   tagline: "税務・不動産・保険の総合資産コンサルティング",
   description:

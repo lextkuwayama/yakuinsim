@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
-import { LineConsultationCta } from "@/components/LineConsultationCta";
+import { LineConsultationCta, LineFloatingCta } from "@/components/LineConsultationCta";
+import { TrustAuthorityBlock } from "@/components/TrustAuthorityBlock";
 import { getPartnerConfig } from "@/config/partner";
 import { SOURCE_LINKS } from "@/config/seo";
 import { toolsTheme } from "@/lib/theme";
@@ -11,16 +12,16 @@ function assetPath(path: string): string {
   return `${base}${normalized}`;
 }
 
-function BetaNotice() {
+function SoftDisclaimer() {
   return (
     <div
-      className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[11px] leading-relaxed text-amber-950"
+      className="mb-6 rounded-xl border border-slate-200 bg-white px-4 py-3 text-[11px] leading-relaxed text-slate-600 shadow-sm"
       role="note"
     >
-      <p className="text-xs font-black">ベータ版について</p>
+      <p className="text-xs font-black text-slate-800">ご利用にあたって</p>
       <p className="mt-1">
-        本ツールは検証段階の<strong>ベータ版</strong>です。表示内容・計算ロジックは予告なく変更される場合があり、
-        不具合や数値の誤りが含まれる可能性があります。社内確認・参考試算以外の目的での利用はお控えください。
+        本シミュレーターは一定の条件に基づく<strong>簡易試算</strong>です。詳細な税務・社会保険料の最適化は、
+        専門家による個別相談をご利用ください。
       </p>
     </div>
   );
@@ -115,22 +116,13 @@ export function PartnerToolShell({
         </div>
       </header>
 
-      <main className={`mx-auto ${maxWidthClass} px-4 py-8`}>
+      <main className={`mx-auto ${maxWidthClass} px-4 py-8 pb-28 md:pb-8`}>
         <header className="mb-6">
           {category ? (
-            <span className="mb-2 inline-flex flex-wrap items-center gap-2">
-              <span className="inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-black text-slate-600">
-                {category}
-              </span>
-              <span className="inline-block rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-800">
-                ベータ版
-              </span>
+            <span className="mb-2 inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-black text-slate-600">
+              {category}
             </span>
-          ) : (
-            <span className="mb-2 inline-block rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-[11px] font-black text-amber-800">
-              ベータ版
-            </span>
-          )}
+          ) : null}
           <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
           {subtitle ? <p className="mt-1 text-sm text-slate-600">{subtitle}</p> : null}
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
@@ -150,9 +142,13 @@ export function PartnerToolShell({
           </div>
         </header>
 
-        <BetaNotice />
+        <SoftDisclaimer />
 
         {children}
+
+        <div className="mt-8">
+          <TrustAuthorityBlock />
+        </div>
 
         <Disclaimer />
 
@@ -178,12 +174,14 @@ export function PartnerToolShell({
               Powered by {poweredByLabel}
             </a>
             {" · "}
-            ベータ版・計算結果は参考情報です
+            計算結果は参考情報です
             {" · "}
             {appVersion}
           </p>
         </div>
       </footer>
+
+      <LineFloatingCta />
     </div>
   );
 }

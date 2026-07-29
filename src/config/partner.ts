@@ -24,7 +24,8 @@ export function getPartnerConfig(): PartnerConfig {
       process.env.NEXT_PUBLIC_EXEC_COMP_CONSULTATION_URL?.trim() ||
       "https://u.prolextol.jp/line/open/RkzL7KSs9y4m?mtid=uqe1XZeM0XEo",
     consultationLabel:
-      process.env.NEXT_PUBLIC_EXEC_COMP_CONSULTATION_LABEL?.trim() || "個別試算・相談はこちら",
+      process.env.NEXT_PUBLIC_EXEC_COMP_CONSULTATION_LABEL?.trim() ||
+      "自社に合った最適な役員報酬を無料診断する",
     appVersion:
       process.env.NEXT_PUBLIC_EXEC_COMP_APP_VERSION?.trim() || `v${packageJson.version}`,
   };

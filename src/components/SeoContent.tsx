@@ -1,5 +1,5 @@
 import { ExternalLink } from "lucide-react";
-import { COMPANY, FAQ_ITEMS, SOURCE_LINKS } from "@/config/seo";
+import { COMPANY, FAQ_ITEMS, SOURCE_LINKS, SITE_DESCRIPTION } from "@/config/seo";
 import { getPartnerConfig } from "@/config/partner";
 
 /** 検索エンジン向けの解説テキスト（使い方・背景・FAQ・提供元）。 */
@@ -87,29 +87,13 @@ export function SeoContent() {
             className="font-bold text-blue-600 hover:text-blue-700"
           >
             {COMPANY.legalName}
-          </a>{" "}
+          </a>
+          {" 及び "}
+          <span className="font-bold text-slate-800">{COMPANY.taxFirmName}</span>
+          {" "}
           が提供しています。{COMPANY.tagline}を行い、企業の役員報酬設計や資産に関する相談にも対応しています。
         </p>
         <p className="mt-3 text-sm leading-relaxed text-slate-600">{COMPANY.description}</p>
-        <dl className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-          <div className="rounded-lg bg-slate-50 px-3 py-2">
-            <dt className="text-[11px] font-black text-slate-500">商号</dt>
-            <dd className="mt-0.5 font-bold text-slate-900">{COMPANY.legalName}</dd>
-          </div>
-          <div className="rounded-lg bg-slate-50 px-3 py-2">
-            <dt className="text-[11px] font-black text-slate-500">事業領域</dt>
-            <dd className="mt-0.5 font-bold text-slate-900">{COMPANY.tagline}</dd>
-          </div>
-        </dl>
-        <a
-          href={COMPANY.companyUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex items-center gap-1 text-sm font-black text-blue-600 hover:text-blue-700"
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-          会社概要を詳しく見る（PROLEXT 公式）
-        </a>
       </section>
 
       <section id="about" className="scroll-mt-16 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -117,15 +101,31 @@ export function SeoContent() {
         <div className="mt-3 text-sm leading-relaxed text-slate-600">
           <p>
             本シミュレーターは{" "}
-            <a
-              href={providerUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="font-bold text-blue-600 hover:text-blue-700"
-            >
-              {providerName}
-            </a>{" "}
-            が提供する無料の役員報酬最適化ツール（ベータ版）です。税務・社会保険の専門アドバイスに代わるものではありません。
+            {partnerName ? (
+              <a
+                href={providerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-bold text-blue-600 hover:text-blue-700"
+              >
+                {providerName}
+              </a>
+            ) : (
+              <>
+                <a
+                  href={COMPANY.siteUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-bold text-blue-600 hover:text-blue-700"
+                >
+                  {COMPANY.legalName}
+                </a>
+                {" 及び "}
+                <span className="font-bold text-slate-800">{COMPANY.taxFirmName}</span>
+              </>
+            )}{" "}
+            が提供する無料の役員報酬最適化ツールです。税務・社会保険の専門アドバイスに代わるものではありません。
+            詳細な最適化は個別相談をご利用ください。
           </p>
           <p className="mt-3 text-xs font-black text-slate-500">主な出典</p>
           <ul className="mt-2 space-y-1.5">
@@ -188,14 +188,13 @@ export function AppJsonLd() {
     },
     provider: {
       "@type": "Organization",
-      name: COMPANY.legalName,
-      alternateName: COMPANY.brandName,
+      name: COMPANY.providerLabel,
+      alternateName: [COMPANY.brandName, COMPANY.legalName, COMPANY.taxFirmName],
       url: COMPANY.siteUrl,
       description: COMPANY.description,
       sameAs: [COMPANY.companyUrl],
     },
-    description:
-      "法人税・所得税・住民税・社会保険料の合計負担が最小になる役員報酬を試算する無料シミュレーター。",
+    description: SITE_DESCRIPTION,
     ...(consultationUrl
       ? { potentialAction: { "@type": "CommunicateAction", target: consultationUrl } }
       : {}),
