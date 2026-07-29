@@ -10,6 +10,10 @@ export const metadata: Metadata = {
   title,
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
+  icons: {
+    icon: [{ url: "/favicon.png", type: "image/png", sizes: "64x64" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   robots: { index: true, follow: true },
   openGraph: {
     title,

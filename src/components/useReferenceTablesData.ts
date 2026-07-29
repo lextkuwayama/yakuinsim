@@ -13,6 +13,7 @@ import {
   type LocalTaxTables,
   type WithholdingTable,
 } from "@/lib/tools-api";
+import staticRefSeed from "@/data/static-ref-seed.json";
 
 type LoadState<T> = {
   data: T | null;
@@ -20,25 +21,55 @@ type LoadState<T> = {
   error: string | null;
 };
 
-function idle<T>(): LoadState<T> {
-  return { data: null, loading: true, error: null };
+function ready<T>(data: T | null, emptyMessage = "マスタが空です"): LoadState<T> {
+  return { data, loading: false, error: data ? null : emptyMessage };
 }
 
-/** 法定参照表を事業年度時点で個別取得する。 */
+const SEED_AS_OF = staticRefSeed.as_of;
+const SEED_PREF = staticRefSeed.prefecture_code;
+
+const seededCorp = ready(staticRefSeed.corp as CorporateTaxTable | null);
+const seededEmployment = ready(staticRefSeed.employment as EmploymentIncomeTable);
+const seededWithholding = ready(
+  (staticRefSeed.withholding?.table ?? null) as WithholdingTable | null,
+  "該当時点の源泉徴収表がありません",
+);
+const seededLocal = ready(staticRefSeed.local as LocalTaxTables);
+const seededAmount = ready(staticRefSeed.amount as AssociationHealthAmountTable);
+
+/**
+ * 法定参照表を事業年度時点で取得する。
+ * 初期表示はビルド時シード（SSG HTML に表が入る）を使い、
+ * 条件変更時のみ API で再取得する。
+ */
 export function useReferenceTablesData(fyStart: string, prefectureCode: string) {
-  const [corp, setCorp] = useState<LoadState<CorporateTaxTable>>(idle);
-  const [local, setLocal] = useState<LoadState<LocalTaxTables>>(idle);
-  const [employment, setEmployment] = useState<LoadState<EmploymentIncomeTable>>(idle);
-  const [withholding, setWithholding] = useState<LoadState<WithholdingTable>>(idle);
-  const [amount, setAmount] = useState<LoadState<AssociationHealthAmountTable>>(idle);
+  const [corp, setCorp] = useState<LoadState<CorporateTaxTable>>(seededCorp);
+  const [local, setLocal] = useState<LoadState<LocalTaxTables>>(seededLocal);
+  const [employment, setEmployment] =
+    useState<LoadState<EmploymentIncomeTable>>(seededEmployment);
+  const [withholding, setWithholding] =
+    useState<LoadState<WithholdingTable>>(seededWithholding);
+  const [amount, setAmount] = useState<LoadState<AssociationHealthAmountTable>>(
+    prefectureCode === SEED_PREF ? seededAmount : { data: null, loading: true, error: null },
+  );
 
   useEffect(() => {
     let cancelled = false;
 
-    setCorp({ data: null, loading: true, error: null });
-    setLocal({ data: null, loading: true, error: null });
-    setEmployment({ data: null, loading: true, error: null });
-    setWithholding({ data: null, loading: true, error: null });
+    if (fyStart === SEED_AS_OF) {
+      setCorp(seededCorp);
+      setLocal(seededLocal);
+      setEmployment(seededEmployment);
+      setWithholding(seededWithholding);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setCorp((prev) => ({ ...prev, loading: true, error: null }));
+    setLocal((prev) => ({ ...prev, loading: true, error: null }));
+    setEmployment((prev) => ({ ...prev, loading: true, error: null }));
+    setWithholding((prev) => ({ ...prev, loading: true, error: null }));
 
     void fetchCorporateTaxTable()
       .then((table) => {
@@ -51,11 +82,11 @@ export function useReferenceTablesData(fyStart: string, prefectureCode: string) 
       })
       .catch((e) => {
         if (cancelled) return;
-        setCorp({
-          data: null,
+        setCorp((prev) => ({
+          ...prev,
           loading: false,
           error: e instanceof Error ? e.message : "法人税マスタの取得に失敗しました",
-        });
+        }));
       });
 
     void fetchLocalTaxTables({ asOf: fyStart })
@@ -65,11 +96,11 @@ export function useReferenceTablesData(fyStart: string, prefectureCode: string) 
       })
       .catch((e) => {
         if (cancelled) return;
-        setLocal({
-          data: null,
+        setLocal((prev) => ({
+          ...prev,
           loading: false,
           error: e instanceof Error ? e.message : "地方税マスタの取得に失敗しました",
-        });
+        }));
       });
 
     void fetchEmploymentIncomeTable({ asOf: fyStart })
@@ -79,11 +110,11 @@ export function useReferenceTablesData(fyStart: string, prefectureCode: string) 
       })
       .catch((e) => {
         if (cancelled) return;
-        setEmployment({
-          data: null,
+        setEmployment((prev) => ({
+          ...prev,
           loading: false,
           error: e instanceof Error ? e.message : "給与所得控除マスタの取得に失敗しました",
-        });
+        }));
       });
 
     void fetchWithholdingTable({ asOf: fyStart })
@@ -97,11 +128,11 @@ export function useReferenceTablesData(fyStart: string, prefectureCode: string) 
       })
       .catch((e) => {
         if (cancelled) return;
-        setWithholding({
-          data: null,
+        setWithholding((prev) => ({
+          ...prev,
           loading: false,
           error: e instanceof Error ? e.message : "源泉徴収表の取得に失敗しました",
-        });
+        }));
       });
 
     return () => {
@@ -111,8 +142,16 @@ export function useReferenceTablesData(fyStart: string, prefectureCode: string) 
 
   useEffect(() => {
     let cancelled = false;
+
+    if (prefectureCode === SEED_PREF && fyStart === SEED_AS_OF) {
+      setAmount(seededAmount);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     const t = setTimeout(() => {
-      setAmount({ data: null, loading: true, error: null });
+      setAmount((prev) => ({ ...prev, loading: true, error: null }));
       void fetchAssociationHealthAmountTable({
         prefectureCode,
         asOf: fyStart,
@@ -123,12 +162,12 @@ export function useReferenceTablesData(fyStart: string, prefectureCode: string) 
         })
         .catch((e) => {
           if (cancelled) return;
-          setAmount({
-            data: null,
+          setAmount((prev) => ({
+            ...prev,
             loading: false,
             error:
               e instanceof Error ? e.message : "協会けんぽ保険料額表の取得に失敗しました",
-          });
+          }));
         });
     }, 150);
     return () => {

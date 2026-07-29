@@ -1,6 +1,6 @@
 {
   "name": "sim-officer-comp",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "description": "役員報酬最適化シミュレーター（フロント＋API・単体起動用）",
   "scripts": {
@@ -9,6 +9,7 @@
     "build:static": "NEXT_PUBLIC_SIM_OFFICER_API_URL=${NEXT_PUBLIC_SIM_OFFICER_API_URL} next build",
     "start": "next start -p 3002",
     "lint": "next lint",
+    "export-ref-seed": "backend\\.venv\\Scripts\\python.exe backend\\scripts\\export_static_ref_seed.py",
     "update-masters": "powershell -ExecutionPolicy Bypass -File update-masters.ps1"
   },
   "dependencies": {

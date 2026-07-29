@@ -48,6 +48,14 @@ backend/config/legal_master_seed.csv
 .\update-masters.ps1 --check-only
 ```
 
+静的サイトの初期表示用マスタ（SEO / SSG）も更新する場合:
+
+```powershell
+npm run export-ref-seed
+```
+
+これで `src/data/static-ref-seed.json` が再生成され、次のフロントビルドで税率表などが HTML 初期出力に含まれます。
+
 **macOS / Linux**
 
 ```bash
