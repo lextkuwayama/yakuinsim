@@ -17,6 +17,16 @@ export const SITE_KEYWORDS = [
   "無料",
 ];
 
+export const COMPANY = {
+  legalName: "株式会社PROLEXT",
+  brandName: "PROLEXT",
+  tagline: "税務・不動産・保険の総合資産コンサルティング",
+  description:
+    "地主様・富裕層・企業の複雑な税金対策・事業承継対策を、不動産・保険・IFAの専門家と共にサポートします。",
+  companyUrl: "https://prolext.jp/company",
+  siteUrl: "https://prolext.jp/",
+} as const;
+
 export type FaqItem = { question: string; answer: string };
 
 export const FAQ_ITEMS: FaqItem[] = [

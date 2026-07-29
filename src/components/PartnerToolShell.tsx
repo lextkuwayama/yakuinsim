@@ -79,16 +79,22 @@ export function PartnerToolShell({
               href={poweredByUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex shrink-0 items-center rounded-md bg-black px-2 py-1.5 transition hover:opacity-90"
+              className="inline-flex shrink-0 items-center gap-2 rounded-md bg-white px-1.5 py-1 transition hover:opacity-80"
               aria-label={`${poweredByLabel} 公式サイトへ`}
             >
               <img
-                src={assetPath("/prolext-logo.png")}
-                alt={poweredByLabel}
-                width={150}
-                height={42}
+                src={assetPath("/prolext-mark.png")}
+                alt=""
+                width={36}
+                height={40}
                 className="h-7 w-auto object-contain sm:h-8"
               />
+              <span
+                className="text-[15px] font-semibold tracking-[0.04em] text-[#1A1716] sm:text-base"
+                style={{ fontFamily: "Georgia, 'Times New Roman', Times, serif" }}
+              >
+                {poweredByLabel}
+              </span>
             </a>
             {partnerSiteUrl ? (
               <a
