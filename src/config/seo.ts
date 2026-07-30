@@ -74,3 +74,55 @@ export const SOURCE_LINKS = [
     url: "https://www.kyoukaikenpo.or.jp/g3/cat330/sb3150/",
   },
 ] as const;
+
+/** 本番ページの正規URL（パンくず・canonical 用）。 */
+export const SITE_CANONICAL_URL = "https://sozoku.prolext.jp/sim-officer/";
+
+export type BreadcrumbItem = { name: string; url: string };
+
+export const BREADCRUMB_ITEMS: BreadcrumbItem[] = [
+  { name: "ホーム", url: COMPANY.siteUrl },
+  { name: "役員報酬シミュレーター", url: SITE_CANONICAL_URL },
+];
+
+export type RelatedLink = {
+  title: string;
+  description: string;
+  url: string;
+  /** 同一ドメイン群の内部リンクか、公式の関連ガイドか */
+  kind: "internal" | "guide";
+};
+
+/** クローラビリティ向上のための関連リンク（コラム追加時はここを差し替え）。 */
+export const RELATED_LINKS: RelatedLink[] = [
+  {
+    title: "相続税シミュレーション",
+    description: "同サイト内の相続税試算ツール。事業承継・資産設計の検討にも活用できます。",
+    url: "https://sozoku.prolext.jp/",
+    kind: "internal",
+  },
+  {
+    title: "PROLEXT 会社概要",
+    description: "税務・不動産・保険の専門家チームについて。個別相談の前に会社情報を確認できます。",
+    url: COMPANY.companyUrl,
+    kind: "internal",
+  },
+  {
+    title: "定期同額給与の注意点（国税庁）",
+    description: "役員報酬をいつ改定できるか、損金算入の要件を公式に確認できます。",
+    url: "https://www.nta.go.jp/taxes/shiraberu/taxanswer/hojin/5759.htm",
+    kind: "guide",
+  },
+  {
+    title: "給与所得控除の仕組み（国税庁）",
+    description: "役員報酬の手取り試算に関わる給与所得控除の公式解説です。",
+    url: "https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1410.htm",
+    kind: "guide",
+  },
+  {
+    title: "よくある質問（FAQ）",
+    description: "改定時期・賞与対応・社会保険の扱いなど、シミュレーター利用時の疑問をまとめています。",
+    url: `${SITE_CANONICAL_URL}#faq`,
+    kind: "internal",
+  },
+];

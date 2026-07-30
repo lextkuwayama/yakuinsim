@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { getPartnerConfig } from "@/config/partner";
-import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_TITLE } from "@/config/seo";
+import { SITE_CANONICAL_URL, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_TITLE } from "@/config/seo";
 import "./globals.css";
 
 const { partnerName } = getPartnerConfig();
@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   title,
   description: SITE_DESCRIPTION,
   keywords: SITE_KEYWORDS,
+  metadataBase: new URL(SITE_CANONICAL_URL),
+  alternates: { canonical: SITE_CANONICAL_URL },
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png", sizes: "64x64" }],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
@@ -24,6 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description: SITE_DESCRIPTION,
+    url: SITE_CANONICAL_URL,
     locale: "ja_JP",
     type: "website",
   },

@@ -1,5 +1,12 @@
-import { ExternalLink } from "lucide-react";
-import { COMPANY, FAQ_ITEMS, SOURCE_LINKS, SITE_DESCRIPTION } from "@/config/seo";
+import { ChevronRight, ExternalLink } from "lucide-react";
+import {
+  BREADCRUMB_ITEMS,
+  COMPANY,
+  FAQ_ITEMS,
+  RELATED_LINKS,
+  SOURCE_LINKS,
+  SITE_DESCRIPTION,
+} from "@/config/seo";
 import { getPartnerConfig } from "@/config/partner";
 
 /** 検索エンジン向けの解説テキスト（使い方・背景・FAQ・提供元）。 */
@@ -55,7 +62,14 @@ export function SeoContent() {
           </p>
           <p>
             実際の最適な決め方は、事業計画・資金繰り・将来の退職金・複数役員の有無など個別事情で変わります。
-            試算結果は参考情報としてご利用ください。
+            試算結果は参考情報としてご利用ください。詳しくは
+            <a
+              href="#related"
+              className="mx-1 font-bold text-blue-600 hover:text-blue-700"
+            >
+              関連情報
+            </a>
+            もあわせてご確認ください。
           </p>
         </div>
       </section>
@@ -70,6 +84,35 @@ export function SeoContent() {
             </div>
           ))}
         </dl>
+      </section>
+
+      <section id="related" className="scroll-mt-16 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-lg font-black text-slate-900">関連情報・あわせて読みたい</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          役員報酬の決め方・定期同額給与・事業承継まわりの関連ページです。サイト内導線と公式ガイドをまとめています。
+        </p>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+          {RELATED_LINKS.map((item) => {
+            const isExternal = /^https?:\/\//.test(item.url) && !item.url.includes("#");
+            return (
+              <li key={item.url}>
+                <a
+                  href={item.url}
+                  {...(isExternal && item.kind === "guide"
+                    ? { target: "_blank", rel: "noreferrer" }
+                    : {})}
+                  className="block h-full rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 transition hover:border-blue-200 hover:bg-blue-50/40"
+                >
+                  <p className="inline-flex items-center gap-1 text-sm font-black text-blue-700">
+                    {item.title}
+                    {item.kind === "guide" ? <ExternalLink className="h-3.5 w-3.5" /> : null}
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed text-slate-600">{item.description}</p>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section id="company" className="scroll-mt-16 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -114,6 +157,33 @@ export function SeoContent() {
   );
 }
 
+/** 画面上部のパンくずリスト。 */
+export function BreadcrumbNav({ className = "" }: { className?: string }) {
+  return (
+    <nav aria-label="パンくずリスト" className={className}>
+      <ol className="flex flex-wrap items-center gap-1 text-[11px] font-bold text-slate-500">
+        {BREADCRUMB_ITEMS.map((item, index) => {
+          const isLast = index === BREADCRUMB_ITEMS.length - 1;
+          return (
+            <li key={item.url} className="inline-flex items-center gap-1">
+              {index > 0 ? <ChevronRight className="h-3 w-3 text-slate-400" aria-hidden /> : null}
+              {isLast ? (
+                <span aria-current="page" className="text-slate-700">
+                  {item.name}
+                </span>
+              ) : (
+                <a href={item.url} className="hover:text-blue-700">
+                  {item.name}
+                </a>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
+
 /** FAQ 構造化データ（リッチリザルト用）。 */
 export function FaqJsonLd() {
   const data = {
@@ -126,6 +196,27 @@ export function FaqJsonLd() {
         "@type": "Answer",
         text: item.answer,
       },
+    })),
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  );
+}
+
+/** パンくずリストの構造化データ。 */
+export function BreadcrumbJsonLd() {
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: BREADCRUMB_ITEMS.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: item.url,
     })),
   };
 

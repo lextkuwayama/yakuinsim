@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 import { LineConsultationCta, LineFloatingCta } from "@/components/LineConsultationCta";
+import { BreadcrumbNav } from "@/components/SeoContent";
 import { TrustAuthorityBlock } from "@/components/TrustAuthorityBlock";
 import { getPartnerConfig } from "@/config/partner";
 import { SOURCE_LINKS } from "@/config/seo";
@@ -117,6 +118,7 @@ export function PartnerToolShell({
       </header>
 
       <main className={`mx-auto ${maxWidthClass} px-4 py-8 pb-28 md:pb-8`}>
+        <BreadcrumbNav className="mb-4" />
         <header className="mb-6">
           {category ? (
             <span className="mb-2 inline-block rounded-full bg-slate-200 px-2.5 py-0.5 text-[11px] font-black text-slate-600">
