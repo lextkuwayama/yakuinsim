@@ -1,70 +1,74 @@
 from pathlib import Path
-
+import re
 from PIL import Image
+import vtracer
 
-SRC = Path(
-    r"C:\Users\yasuh\.cursor\projects\c-Users-yasuh-Desktop-sim-officer-comp\assets"
-    r"\c__Users_yasuh_AppData_Roaming_Cursor_User_workspaceStorage_"
-    r"4e312e5e063ff6ab892ddb58758b3731_images_______-dd5a2c33-cc06-43a4-b13b-95c747430252.png"
-)
-OUT_DIR = Path(__file__).resolve().parents[1] / "public"
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "tmp-logo" / "prolext-favicon-src.png"
+OUT = ROOT / "public"
 
 
 def main() -> None:
-    img = Image.open(SRC).convert("RGBA")
-    print("source", img.size)
-
-    pixels = img.load()
-    w, h = img.size
-    xs: list[int] = []
-    ys: list[int] = []
-    for y in range(h):
-        for x in range(w):
-            r, g, b, a = pixels[x, y]
-            if a < 16:
-                continue
-            if r + g + b > 80:
-                xs.append(x)
-                ys.append(y)
-
-    if not xs:
-        raise SystemExit("no logo pixels found")
-
-    min_x, max_x = min(xs), max(xs)
-    min_y, max_y = min(ys), max(ys)
-    print("bbox", min_x, min_y, max_x, max_y)
-
-    pad = int(max(max_x - min_x, max_y - min_y) * 0.12)
-    min_x = max(0, min_x - pad)
-    min_y = max(0, min_y - pad)
-    max_x = min(w - 1, max_x + pad)
-    max_y = min(h - 1, max_y + pad)
-    crop = img.crop((min_x, min_y, max_x + 1, max_y + 1))
-
-    cw, ch = crop.size
-    side = max(cw, ch)
-    square = Image.new("RGBA", (side, side), (0, 0, 0, 255))
-    square.paste(crop, ((side - cw) // 2, (side - ch) // 2), crop)
-
-    def save_png(im: Image.Image, path: Path, size: int) -> None:
-        out = im.resize((size, size), Image.Resampling.LANCZOS)
-        out.save(path, format="PNG", optimize=True)
-        print("wrote", path.name, size)
-
-    save_png(square, OUT_DIR / "favicon.png", 64)
-    save_png(square, OUT_DIR / "favicon-32.png", 32)
-    save_png(square, OUT_DIR / "apple-touch-icon.png", 180)
-    save_png(square, OUT_DIR / "icon-512.png", 512)
-
-    ico_sizes = [(16, 16), (32, 32), (48, 48)]
-    ico_images = [square.resize(s, Image.Resampling.LANCZOS) for s in ico_sizes]
-    ico_images[0].save(
-        OUT_DIR / "favicon.ico",
-        format="ICO",
-        sizes=ico_sizes,
-        append_images=ico_images[1:],
+    svg_path = OUT / "prolext-mark-gold.svg"
+    vtracer.convert_image_to_svg_py(
+        str(SRC),
+        str(svg_path),
+        colormode="color",
+        hierarchical="stacked",
+        mode="spline",
+        filter_speckle=2,
+        color_precision=6,
+        layer_difference=16,
+        corner_threshold=60,
+        length_threshold=4.0,
+        max_iterations=10,
+        splice_threshold=45,
+        path_precision=3,
     )
-    print("wrote favicon.ico")
+    svg = svg_path.read_text(encoding="utf-8")
+    fills = sorted(set(re.findall(r'fill="(#[A-Fa-f0-9]{3,8}|[a-zA-Z]+)"', svg)))
+    print("fills before", fills)
+
+    parts = re.split(r"(<path\b[^>]*/>)", svg)
+    cleaned: list[str] = []
+    for part in parts:
+        if part.startswith("<path"):
+            fill_match = re.search(r'fill="([^"]+)"', part)
+            fill = (fill_match.group(1) if fill_match else "").lower()
+            if fill in {"#000", "#000000", "black"}:
+                continue
+        cleaned.append(part)
+    svg = "".join(cleaned)
+    # Ensure transparent background viewBox.
+    if 'viewBox="' not in svg:
+        svg = svg.replace(
+            '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="292" height="292">',
+            '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="292" height="292" viewBox="0 0 292 292">',
+            1,
+        )
+    svg_path.write_text(svg, encoding="utf-8")
+    fills = sorted(set(re.findall(r'fill="(#[A-Fa-f0-9]{3,8}|[a-zA-Z]+)"', svg)))
+    print("fills after", fills)
+
+    # Native PNG (no soft upscale) for fallback.
+    Image.open(SRC).convert("RGBA").save(OUT / "prolext-mark-gold-v2.png", format="PNG", optimize=True)
+
+    mark = Image.open(SRC).convert("RGBA")
+    canvas = Image.new("RGBA", mark.size, (0, 0, 0, 255))
+    canvas.alpha_composite(mark)
+    for name, size in [
+        ("favicon.png", 64),
+        ("favicon-32.png", 32),
+        ("apple-touch-icon.png", 180),
+        ("icon-512.png", 512),
+    ]:
+        canvas.resize((size, size), Image.Resampling.LANCZOS).save(
+            OUT / name, format="PNG", optimize=True
+        )
+    sizes = [(16, 16), (32, 32), (48, 48)]
+    imgs = [canvas.resize(s, Image.Resampling.LANCZOS) for s in sizes]
+    imgs[0].save(OUT / "favicon.ico", format="ICO", sizes=sizes, append_images=imgs[1:])
+    print("done")
 
 
 if __name__ == "__main__":

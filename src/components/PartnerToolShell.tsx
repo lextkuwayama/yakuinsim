@@ -85,11 +85,11 @@ export function PartnerToolShell({
               aria-label={`${poweredByLabel} 公式サイトへ`}
             >
               <img
-                src={assetPath("/prolext-mark-gold-v2.png")}
+                src={assetPath("/prolext-mark-gold.svg")}
                 alt=""
-                width={36}
+                width={40}
                 height={40}
-                className="h-7 w-auto object-contain sm:h-8"
+                className="h-8 w-8 object-contain sm:h-9 sm:w-9"
               />
               <span
                 className="text-[15px] font-semibold tracking-[0.04em] text-[#1A1716] sm:text-base"

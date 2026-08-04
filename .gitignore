@@ -1,6 +1,7 @@
 ﻿node_modules/
 .next/
 out/
+tmp-logo/
 backend/.venv/
 backend/storage/
 backend/**/__pycache__/
