@@ -50,23 +50,26 @@ def main() -> None:
     fills = sorted(set(re.findall(r'fill="(#[A-Fa-f0-9]{3,8}|[a-zA-Z]+)"', svg)))
     print("fills after", fills)
 
-    # Native PNG (no soft upscale) for fallback.
+    # Header mark / favicons: gold on transparent (no black fill).
+    mark = Image.open(SRC).convert("RGBA")
     Image.open(SRC).convert("RGBA").save(OUT / "prolext-mark-gold-v2.png", format="PNG", optimize=True)
 
-    mark = Image.open(SRC).convert("RGBA")
-    canvas = Image.new("RGBA", mark.size, (0, 0, 0, 255))
-    canvas.alpha_composite(mark)
     for name, size in [
         ("favicon.png", 64),
         ("favicon-32.png", 32),
-        ("apple-touch-icon.png", 180),
         ("icon-512.png", 512),
     ]:
-        canvas.resize((size, size), Image.Resampling.LANCZOS).save(
+        mark.resize((size, size), Image.Resampling.LANCZOS).save(
             OUT / name, format="PNG", optimize=True
         )
+
+    # Apple touch icons prefer an opaque backdrop.
+    apple = Image.new("RGBA", (180, 180), (0, 0, 0, 255))
+    apple.alpha_composite(mark.resize((180, 180), Image.Resampling.LANCZOS))
+    apple.save(OUT / "apple-touch-icon.png", format="PNG", optimize=True)
+
     sizes = [(16, 16), (32, 32), (48, 48)]
-    imgs = [canvas.resize(s, Image.Resampling.LANCZOS) for s in sizes]
+    imgs = [mark.resize(s, Image.Resampling.LANCZOS) for s in sizes]
     imgs[0].save(OUT / "favicon.ico", format="ICO", sizes=sizes, append_images=imgs[1:])
     print("done")
 
