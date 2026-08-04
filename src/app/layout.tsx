@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_CANONICAL_URL),
   alternates: { canonical: SITE_CANONICAL_URL },
   icons: {
-    icon: [{ url: "/favicon.png", type: "image/png", sizes: "64x64" }],
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.png", type: "image/png", sizes: "64x64" },
+    ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   robots: { index: true, follow: true },
