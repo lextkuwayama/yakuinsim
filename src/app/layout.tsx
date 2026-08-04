@@ -11,6 +11,8 @@ const configuredGtmId =
 const googleTagManagerId = /^GTM-[A-Z0-9]+$/.test(configuredGtmId)
   ? configuredGtmId
   : null;
+/** basePath 付き静的公開でも、タブアイコンがルートではなく /sim-officer を指すようにする。 */
+const iconBase = SITE_CANONICAL_URL.replace(/\/$/, "");
 
 export const metadata: Metadata = {
   title,
@@ -20,11 +22,12 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE_CANONICAL_URL },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon.png", type: "image/png", sizes: "64x64" },
+      { url: `${iconBase}/favicon.ico`, sizes: "any" },
+      { url: `${iconBase}/favicon-32.png`, type: "image/png", sizes: "32x32" },
+      { url: `${iconBase}/favicon.png`, type: "image/png", sizes: "64x64" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: `${iconBase}/favicon.ico`,
+    apple: [{ url: `${iconBase}/apple-touch-icon.png`, sizes: "180x180" }],
   },
   robots: { index: true, follow: true },
   openGraph: {
