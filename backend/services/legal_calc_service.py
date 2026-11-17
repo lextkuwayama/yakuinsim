@@ -596,6 +596,96 @@ def calc_association_health_premium(
     }
 
 
+def calc_association_bonus_premium(
+    bonus_payments: list[int],
+    *,
+    prefecture_code: str = "13",
+    care_applicable: bool = False,
+    as_of: Optional[str] = None,
+) -> dict[str, Any]:
+    """賞与（事前確定届出給与を含む）の社会保険料を標準賞与額×料率で算出する。
+
+    標準賞与額は千円未満切捨。健保は年度累計上限、厚年は支給1回あたり上限を適用。
+    """
+    rates = lookup_association_health_rate(prefecture_code, as_of=as_of)
+    health_rate = float(rates["health_care_rate"] if care_applicable else rates["health_rate"])
+    child_support_rate = float(rates.get("child_support_rate") or 0)
+    pension_rate = float(rates.get("pension_rate") or 0)
+    childcare_contrib_rate = float(rates.get("childcare_contrib_rate") or 0)
+
+    health_cap = int(
+        clip_social_insurance_basis(0, "健康保険", "標準賞与額", as_of=as_of)["cap_amount"]
+    )
+    pension_cap = int(
+        clip_social_insurance_basis(0, "厚生年金", "標準賞与額", as_of=as_of)["cap_amount"]
+    )
+
+    health_cum = 0
+    health_std_total = 0
+    pension_std_total = 0
+    payment_details: list[dict[str, Any]] = []
+
+    for raw in bonus_payments:
+        amount = max(0, int(raw))
+        # 標準賞与額は千円未満切捨
+        std_raw = (amount // 1000) * 1000
+        health_room = max(0, health_cap - health_cum)
+        health_std = min(std_raw, health_room)
+        pension_std = min(std_raw, pension_cap)
+        health_cum += health_std
+        health_std_total += health_std
+        pension_std_total += pension_std
+        payment_details.append(
+            {
+                "amount": amount,
+                "standard_bonus": std_raw,
+                "standard_bonus_health": health_std,
+                "standard_bonus_pension": pension_std,
+            }
+        )
+
+    def _half(full: float) -> float:
+        return _round_half_yen(full / 2) if full else 0.0
+
+    health_full = health_std_total * health_rate
+    child_support_full = health_std_total * child_support_rate
+    pension_full = pension_std_total * pension_rate
+    childcare_contrib_full = pension_std_total * childcare_contrib_rate
+
+    health_employee = _half(health_full)
+    child_support_employee = _half(child_support_full)
+    pension_employee = _half(pension_full) if pension_std_total else 0.0
+
+    employee_total = _floor_yen(health_employee + child_support_employee + pension_employee)
+    employer_health = _floor_yen(health_full - health_employee)
+    employer_child_support = _floor_yen(child_support_full - child_support_employee)
+    employer_pension = _floor_yen(pension_full - pension_employee) if pension_std_total else 0
+    employer_childcare = _floor_yen(childcare_contrib_full)
+    employer_total = employer_health + employer_child_support + employer_pension + employer_childcare
+
+    return {
+        "bonus_total": sum(max(0, int(x)) for x in bonus_payments),
+        "payment_count": len(bonus_payments),
+        "payments": payment_details,
+        "standard_bonus_health": health_std_total,
+        "standard_bonus_pension": pension_std_total,
+        "health_cap": health_cap,
+        "pension_cap_per_payment": pension_cap,
+        "health_rate": health_rate,
+        "child_support_rate": child_support_rate,
+        "pension_rate": pension_rate,
+        "childcare_contrib_rate": childcare_contrib_rate,
+        "employee_total": employee_total,
+        "employer_total": employer_total,
+        "total": employee_total + employer_total,
+        "prefecture_code": str(rates.get("prefecture_code")),
+        "prefecture": rates.get("prefecture"),
+        "care_applicable": care_applicable,
+        "valid_from": rates.get("valid_from"),
+        "label": rates.get("label"),
+    }
+
+
 def list_association_health_prefectures(*, as_of: Optional[str] = None) -> list[dict[str, Any]]:
     version = ref_table_service.effective_version("association_health_rates", as_of)
     if not version:

@@ -111,7 +111,11 @@ def public_executive_comp_optimize(
     health_rate: Optional[float] = Query(None, gt=0, le=0.3),
     monthly_step: int = Query(100000, ge=10000),
     include_social: bool = Query(True),
+    include_bonus: bool = Query(False),
+    bonus_step: int = Query(500000, ge=100000),
+    bonus_payment_count: int = Query(1, ge=1, le=4),
     current_monthly: Optional[int] = Query(None, ge=0),
+    current_bonus: Optional[int] = Query(None, ge=0),
     as_of: Optional[str] = Query(None),
 ) -> dict[str, Any]:
     try:
@@ -124,7 +128,11 @@ def public_executive_comp_optimize(
             health_rate=health_rate,
             monthly_step=monthly_step,
             include_social=include_social,
+            include_bonus=include_bonus,
+            bonus_step=bonus_step,
+            bonus_payment_count=bonus_payment_count,
             current_monthly=current_monthly,
+            current_bonus=current_bonus,
             as_of=as_of,
         )
     except ValueError as exc:

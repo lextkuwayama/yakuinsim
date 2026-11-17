@@ -14,6 +14,17 @@ export const STEP_OPTIONS = [
   { label: "50万円刻み", value: 500000 },
 ];
 
+export const BONUS_STEP_OPTIONS = [
+  { label: "50万円刻み", value: 500000 },
+  { label: "100万円刻み", value: 1000000 },
+  { label: "200万円刻み", value: 2000000 },
+];
+
+export const BONUS_PAYMENT_OPTIONS = [
+  { label: "年1回", value: 1 },
+  { label: "年2回", value: 2 },
+];
+
 export function useExecutiveCompSimulation() {
   const [profit, setProfit] = useState(20_000_000);
   const [executiveAge, setExecutiveAge] = useState(45);
@@ -26,7 +37,11 @@ export function useExecutiveCompSimulation() {
   const [prefError, setPrefError] = useState<string | null>(null);
   const [monthlyStep, setMonthlyStep] = useState(100000);
   const [includeSocial, setIncludeSocial] = useState(true);
+  const [includeBonus, setIncludeBonus] = useState(true);
+  const [bonusStep, setBonusStep] = useState(500000);
+  const [bonusPaymentCount, setBonusPaymentCount] = useState(1);
   const [currentMonthly, setCurrentMonthly] = useState(800000);
+  const [currentBonus, setCurrentBonus] = useState(0);
   const [compareCurrent, setCompareCurrent] = useState(true);
 
   const [result, setResult] = useState<ExecCompResult | null>(null);
@@ -69,7 +84,11 @@ export function useExecutiveCompSimulation() {
       prefectureCode: prefCode,
       monthlyStep,
       includeSocial,
+      includeBonus,
+      bonusStep: includeBonus ? bonusStep : undefined,
+      bonusPaymentCount: includeBonus ? bonusPaymentCount : undefined,
       currentMonthly: compareCurrent ? currentMonthly : undefined,
+      currentBonus: compareCurrent && includeBonus ? currentBonus : undefined,
     })
       .then((r) => {
         setResult(r);
@@ -90,13 +109,19 @@ export function useExecutiveCompSimulation() {
     prefCode,
     monthlyStep,
     includeSocial,
+    includeBonus,
+    bonusStep,
+    bonusPaymentCount,
     currentMonthly,
+    currentBonus,
     compareCurrent,
   ]);
 
   const savingsVsZero = useMemo(() => {
     if (!result) return null;
-    const zero = result.candidates.find((c) => c.monthly_salary === 0);
+    const zero = result.candidates.find(
+      (c) => c.monthly_salary === 0 && (c.annual_bonus ?? 0) === 0,
+    );
     if (!zero) return null;
     return result.optimal.combined_net - zero.combined_net;
   }, [result]);
@@ -125,8 +150,16 @@ export function useExecutiveCompSimulation() {
     setMonthlyStep,
     includeSocial,
     setIncludeSocial,
+    includeBonus,
+    setIncludeBonus,
+    bonusStep,
+    setBonusStep,
+    bonusPaymentCount,
+    setBonusPaymentCount,
     currentMonthly,
     setCurrentMonthly,
+    currentBonus,
+    setCurrentBonus,
     compareCurrent,
     setCompareCurrent,
     result,

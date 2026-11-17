@@ -160,6 +160,9 @@ export type ExecCompCorporateBreakdown = {
 
 export type ExecCompCandidate = {
   monthly_salary: number;
+  annual_bonus: number;
+  bonus_payment_count?: number;
+  monthly_annual?: number;
   annual_salary: number;
   company_taxable: number;
   corporate_tax: number;
@@ -167,6 +170,10 @@ export type ExecCompCandidate = {
   employee_social: number;
   employer_social: number;
   total_social: number;
+  employee_social_monthly?: number;
+  employer_social_monthly?: number;
+  employee_social_bonus?: number;
+  employer_social_bonus?: number;
   income_tax: number;
   reconstruction_tax: number;
   resident_tax: number;
@@ -178,6 +185,7 @@ export type ExecCompCandidate = {
 
 export type ExecCompDelta = {
   monthly_salary: number;
+  annual_bonus?: number;
   annual_salary: number;
   combined_net: number;
   total_burden: number;
@@ -196,6 +204,9 @@ export type ExecCompResult = {
   executive_age: number;
   small_business: boolean;
   include_social: boolean;
+  include_bonus?: boolean;
+  bonus_step?: number;
+  bonus_payment_count?: number;
   monthly_step: number;
   optimal: ExecCompCandidate;
   current: ExecCompCandidate | null;
@@ -208,6 +219,8 @@ export type ExecCompResult = {
     care_applicable: boolean;
     pension_applicable: boolean;
     health_applicable: boolean;
+    include_bonus?: boolean;
+    bonus_payment_count?: number;
     basic_income_deduction: number;
     resident_basic_deduction: number;
     reconstruction_rate: number;
@@ -235,7 +248,11 @@ export async function optimizeExecutiveComp(params: {
   prefectureCode?: string;
   monthlyStep: number;
   includeSocial: boolean;
+  includeBonus?: boolean;
+  bonusStep?: number;
+  bonusPaymentCount?: number;
   currentMonthly?: number;
+  currentBonus?: number;
 }): Promise<ExecCompResult> {
   const q = new URLSearchParams({
     pretax_profit: String(params.pretaxProfit),
@@ -244,9 +261,15 @@ export async function optimizeExecutiveComp(params: {
     small_business: String(params.smallBusiness),
     monthly_step: String(params.monthlyStep),
     include_social: String(params.includeSocial),
+    include_bonus: String(params.includeBonus ?? false),
   });
   if (params.prefectureCode) q.set("prefecture_code", params.prefectureCode);
+  if (params.bonusStep != null) q.set("bonus_step", String(params.bonusStep));
+  if (params.bonusPaymentCount != null) {
+    q.set("bonus_payment_count", String(params.bonusPaymentCount));
+  }
   if (params.currentMonthly != null) q.set("current_monthly", String(params.currentMonthly));
+  if (params.currentBonus != null) q.set("current_bonus", String(params.currentBonus));
   return getJson<ExecCompResult>(`/executive-comp/optimize?${q}`);
 }
 
