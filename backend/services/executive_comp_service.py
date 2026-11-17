@@ -399,6 +399,128 @@ def _candidate_key(c: dict[str, Any]) -> tuple[int, int]:
     return (int(c["monthly_salary"]), int(c.get("annual_bonus") or 0))
 
 
+def _resolve_context(
+    pretax_profit: int,
+    fiscal_year_start: str,
+    *,
+    executive_age: int,
+    prefecture_code: str,
+    as_of: Optional[str],
+    company_scenario: Optional[dict[str, Any]],
+    bonus_payment_count: int,
+) -> dict[str, Any]:
+    """共通の年齢・料率・控除・評価引数を解決する。"""
+    profit = max(0, int(pretax_profit))
+    age = int(executive_age)
+    if age < 18 or age > 99:
+        raise ValueError("役員年齢は18〜99歳で入力してください")
+    payments = max(1, min(4, int(bonus_payment_count)))
+    resolved_as_of = as_of or fiscal_year_start or _dt.date.today().isoformat()
+    scenario = {**DEFAULT_COMPANY_SCENARIO, **(company_scenario or {})}
+
+    rates_meta = legal_calc_service.lookup_association_health_rate(
+        prefecture_code, as_of=resolved_as_of
+    )
+    care_applicable = 40 <= age <= 64
+    resolved_health_rate = float(
+        rates_meta["health_care_rate"] if care_applicable else rates_meta["health_rate"]
+    )
+    pension_rate = float(rates_meta.get("pension_rate") or 0)
+    if not pension_rate:
+        pension_rate = _require_rate(
+            "social_insurance.pension.rate", resolved_as_of, label="厚生年金保険料率"
+        )
+
+    basic_income_deduction = _require_amount(
+        "deduction.basic", resolved_as_of, label="基礎控除（所得税）"
+    )
+    reconstruction_rate = _require_rate(
+        "income_tax.reconstruction_surcharge_rate",
+        resolved_as_of,
+        label="復興特別所得税率",
+    )
+    resident_basic_deduction = _require_amount(
+        "resident_tax.basic_deduction", resolved_as_of, label="住民税基礎控除"
+    )
+
+    eval_kwargs = dict(
+        executive_age=age,
+        prefecture_code=prefecture_code,
+        care_applicable=care_applicable,
+        basic_income_deduction=basic_income_deduction,
+        resident_basic_deduction=resident_basic_deduction,
+        reconstruction_rate=reconstruction_rate,
+        company_scenario=scenario,
+        bonus_payment_count=payments,
+    )
+    return {
+        "profit": profit,
+        "age": age,
+        "payments": payments,
+        "as_of": resolved_as_of,
+        "scenario": scenario,
+        "rates_meta": rates_meta,
+        "care_applicable": care_applicable,
+        "resolved_health_rate": resolved_health_rate,
+        "pension_rate": pension_rate,
+        "basic_income_deduction": basic_income_deduction,
+        "reconstruction_rate": reconstruction_rate,
+        "resident_basic_deduction": resident_basic_deduction,
+        "eval_kwargs": eval_kwargs,
+    }
+
+
+def _assumptions_block(
+    *,
+    ctx: dict[str, Any],
+    fiscal_year_start: str,
+    small_business: bool,
+    include_bonus: bool,
+    notes: list[str],
+) -> dict[str, Any]:
+    scenario = ctx["scenario"]
+    age = ctx["age"]
+    sample_local = legal_calc_service.calc_corporate_local_taxes(
+        0,
+        fiscal_year_start,
+        small_business=small_business,
+        capital=int(scenario["capital"]),
+        employees=int(scenario["employees"]),
+        jurisdiction=str(scenario["jurisdiction"]),
+        use_excess_rate=bool(scenario.get("use_excess_rate", False)),
+    )
+    return {
+        "pension_rate": ctx["pension_rate"],
+        "health_rate": ctx["resolved_health_rate"],
+        "executive_age": age,
+        "care_applicable": ctx["care_applicable"],
+        "pension_applicable": age < 70,
+        "health_applicable": age < 75,
+        "prefecture": ctx["rates_meta"].get("prefecture"),
+        "include_bonus": include_bonus,
+        "bonus_payment_count": ctx["payments"],
+        "basic_income_deduction": ctx["basic_income_deduction"],
+        "resident_basic_deduction": ctx["resident_basic_deduction"],
+        "reconstruction_rate": ctx["reconstruction_rate"],
+        "company_scenario": {
+            "id": scenario.get("id"),
+            "label": scenario.get("label"),
+            "capital": scenario.get("capital"),
+            "employees": scenario.get("employees"),
+            "jurisdiction": scenario.get("jurisdiction"),
+            "use_excess_rate": scenario.get("use_excess_rate", False),
+        },
+        "corporate_local_tax_rate": sample_local.get("local_corporate_rate"),
+        "corporate_resident_levy_rate": sample_local.get("resident_levy_rate"),
+        "corporate_percapita": sample_local.get("percapita"),
+        "special_enterprise_rate": sample_local.get("special_enterprise_rate"),
+        "jurisdiction": sample_local.get("jurisdiction_label")
+        or sample_local.get("jurisdiction"),
+        "fallback_used": [],
+        "notes": notes,
+    }
+
+
 def _build_search_grid(
     profit: int,
     monthly_step: int,
@@ -454,6 +576,81 @@ def _build_search_grid(
     return step, b_step, pairs
 
 
+def evaluate_executive_comp(
+    pretax_profit: int,
+    fiscal_year_start: str,
+    *,
+    monthly_salary: int,
+    annual_bonus: int = 0,
+    executive_age: int,
+    small_business: bool = True,
+    prefecture_code: str = "13",
+    as_of: Optional[str] = None,
+    include_social: bool = True,
+    bonus_payment_count: int = 1,
+    company_scenario: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """指定した定期同額給与・事前確定届出給与の組合せを1点だけ試算する。"""
+    ctx = _resolve_context(
+        pretax_profit,
+        fiscal_year_start,
+        executive_age=executive_age,
+        prefecture_code=prefecture_code,
+        as_of=as_of,
+        company_scenario=company_scenario,
+        bonus_payment_count=bonus_payment_count,
+    )
+    monthly = max(0, int(monthly_salary))
+    bonus = max(0, int(annual_bonus))
+    selected = _evaluate(
+        monthly,
+        ctx["profit"],
+        fiscal_year_start,
+        ctx["as_of"],
+        small_business=small_business,
+        include_social=include_social,
+        annual_bonus=bonus,
+        **ctx["eval_kwargs"],
+    )
+    notes = [
+        "入力した毎月の役員報酬（定期同額給与）と役員賞与（事前確定届出給与）で計算しています。",
+        f"役員賞与は年{ctx['payments']}回・均等支給として計算しています。"
+        "届出期限・支給時期の要件は判定していません。",
+        "社会保険料は月額＝標準報酬等級表×都道府県料率、届出給与＝標準賞与額×料率（健保年度累計・厚年1回上限あり）で算出します。",
+        "役員は雇用保険の対象外として計算しています。",
+        "健康保険料率は協会けんぽ都道府県マスタから取得します。",
+        f"役員年齢は{ctx['age']}歳。40〜64歳は介護保険を加算し、70歳以上は厚生年金、75歳以上は健康保険を計算対象外としています。",
+        "65歳以上の介護保険料（市区町村が徴収）と75歳以上の後期高齢者医療保険料は本試算に含みません。",
+        f"住民税の基礎控除は{ctx['resident_basic_deduction']:,}円、所得控除は基礎控除と社会保険料控除のみで概算しています。",
+        f"法人地方税シナリオ: {ctx['scenario'].get('label')}（資本金・従業員・所在地の入力UIは未実装）。事業所税・外形標準課税は対象外。",
+        "事業税の損金算入（翌期）は考慮していません。実際の判断は税理士にご確認ください。",
+    ]
+    return {
+        "mode": "manual",
+        "pretax_profit": ctx["profit"],
+        "fiscal_year_start": fiscal_year_start,
+        "as_of": ctx["as_of"],
+        "small_business": small_business,
+        "include_social": include_social,
+        "include_bonus": bonus > 0,
+        "bonus_payment_count": ctx["payments"],
+        "executive_age": ctx["age"],
+        "prefecture_code": prefecture_code,
+        "selected": selected,
+        "optimal": None,
+        "current": None,
+        "delta": None,
+        "candidates": [selected],
+        "assumptions": _assumptions_block(
+            ctx=ctx,
+            fiscal_year_start=fiscal_year_start,
+            small_business=small_business,
+            include_bonus=True,
+            notes=notes,
+        ),
+    }
+
+
 def optimize_executive_comp(
     pretax_profit: int,
     fiscal_year_start: str,
@@ -479,45 +676,25 @@ def optimize_executive_comp(
     health_rate は互換のため受け取るが、等級表経路では料率マスタを優先する（上書きしない）。
     """
     del health_rate  # 等級表経路では都道府県マスタの料率を使う
-    profit = max(0, int(pretax_profit))
-    age = int(executive_age)
-    if age < 18 or age > 99:
-        raise ValueError("役員年齢は18〜99歳で入力してください")
-    payments = max(1, min(4, int(bonus_payment_count)))
-    as_of = as_of or fiscal_year_start or _dt.date.today().isoformat()
-    scenario = {**DEFAULT_COMPANY_SCENARIO, **(company_scenario or {})}
-
-    rates_meta = legal_calc_service.lookup_association_health_rate(prefecture_code, as_of=as_of)
-    care_applicable = 40 <= age <= 64
-    resolved_health_rate = float(
-        rates_meta["health_care_rate"] if care_applicable else rates_meta["health_rate"]
-    )
-    pension_rate = float(rates_meta.get("pension_rate") or 0)
-    if not pension_rate:
-        pension_rate = _require_rate(
-            "social_insurance.pension.rate", as_of, label="厚生年金保険料率"
-        )
-
-    basic_income_deduction = _require_amount("deduction.basic", as_of, label="基礎控除（所得税）")
-    reconstruction_rate = _require_rate(
-        "income_tax.reconstruction_surcharge_rate", as_of, label="復興特別所得税率"
-    )
-    resident_basic_deduction = _require_amount(
-        "resident_tax.basic_deduction", as_of, label="住民税基礎控除"
-    )
-
-    eval_kwargs = dict(
-        small_business=small_business,
-        executive_age=age,
+    ctx = _resolve_context(
+        pretax_profit,
+        fiscal_year_start,
+        executive_age=executive_age,
         prefecture_code=prefecture_code,
-        care_applicable=care_applicable,
-        basic_income_deduction=basic_income_deduction,
-        resident_basic_deduction=resident_basic_deduction,
-        reconstruction_rate=reconstruction_rate,
-        include_social=include_social,
-        company_scenario=scenario,
-        bonus_payment_count=payments,
+        as_of=as_of,
+        company_scenario=company_scenario,
+        bonus_payment_count=bonus_payment_count,
     )
+    profit = ctx["profit"]
+    age = ctx["age"]
+    payments = ctx["payments"]
+    as_of = ctx["as_of"]
+    scenario = ctx["scenario"]
+    eval_kwargs = {
+        **ctx["eval_kwargs"],
+        "small_business": small_business,
+        "include_social": include_social,
+    }
 
     step, resolved_bonus_step, pairs = _build_search_grid(
         profit,
@@ -589,39 +766,30 @@ def optimize_executive_comp(
         key=lambda c: (-c["combined_net"], c["monthly_salary"], int(c.get("annual_bonus") or 0))
     )
 
-    sample_local = legal_calc_service.calc_corporate_local_taxes(
-        0,
-        fiscal_year_start,
-        small_business=small_business,
-        capital=int(scenario["capital"]),
-        employees=int(scenario["employees"]),
-        jurisdiction=str(scenario["jurisdiction"]),
-        use_excess_rate=bool(scenario.get("use_excess_rate", False)),
-    )
-
     notes = [
         (
-            "定期同額給与（月額）と事前確定届出給与（年額）の分配を探索しています。"
+            "毎月の役員報酬（定期同額給与）と役員賞与（事前確定届出給与）の組み合わせを探しています。"
             if include_bonus
-            else "事前確定届出給与は含めず、定期同額給与（毎月定額）のみで探索しています。"
+            else "役員賞与は含めず、毎月の役員報酬（定期同額給与）だけで探しています。"
         ),
         (
-            f"事前確定届出給与は年{payments}回支給・各回均等割りの前提です。"
-            "届出期限・支給時期の適法性は判定していません。"
+            f"役員賞与は年{payments}回・均等支給として計算しています。"
+            "届出期限・支給時期の要件は判定していません。"
             if include_bonus
-            else "事前確定届出給与を含める場合は、入力の「事前確定届出給与を含めて最適化」をオンにしてください。"
+            else "賞与も含めて探す場合は「役員賞与（事前確定届出給与）も組み合わせて探す」にチェックを入れてください。"
         ),
         "社会保険料は月額＝標準報酬等級表×都道府県料率、届出給与＝標準賞与額×料率（健保年度累計・厚年1回上限あり）で算出します。",
         "役員は雇用保険の対象外として計算しています。",
         "健康保険料率は協会けんぽ都道府県マスタから取得します。",
         f"役員年齢は{age}歳。40〜64歳は介護保険を加算し、70歳以上は厚生年金、75歳以上は健康保険を計算対象外としています。",
         "65歳以上の介護保険料（市区町村が徴収）と75歳以上の後期高齢者医療保険料は本試算に含みません。",
-        f"住民税の基礎控除は{resident_basic_deduction:,}円、所得控除は基礎控除と社会保険料控除のみで概算しています。",
+        f"住民税の基礎控除は{ctx['resident_basic_deduction']:,}円、所得控除は基礎控除と社会保険料控除のみで概算しています。",
         f"法人地方税シナリオ: {scenario.get('label')}（資本金・従業員・所在地の入力UIは未実装）。事業所税・外形標準課税は対象外。",
         "事業税の損金算入（翌期）は考慮していません。実際の判断は税理士にご確認ください。",
     ]
 
     return {
+        "mode": "optimize",
         "pretax_profit": profit,
         "fiscal_year_start": fiscal_year_start,
         "as_of": as_of,
@@ -633,38 +801,16 @@ def optimize_executive_comp(
         "executive_age": age,
         "monthly_step": step,
         "prefecture_code": prefecture_code,
+        "selected": None,
         "optimal": optimal,
         "current": current,
         "delta": delta,
         "candidates": candidates,
-        "assumptions": {
-            "pension_rate": pension_rate,
-            "health_rate": resolved_health_rate,
-            "executive_age": age,
-            "care_applicable": care_applicable,
-            "pension_applicable": age < 70,
-            "health_applicable": age < 75,
-            "prefecture": rates_meta.get("prefecture"),
-            "include_bonus": include_bonus,
-            "bonus_payment_count": payments,
-            "basic_income_deduction": basic_income_deduction,
-            "resident_basic_deduction": resident_basic_deduction,
-            "reconstruction_rate": reconstruction_rate,
-            "company_scenario": {
-                "id": scenario.get("id"),
-                "label": scenario.get("label"),
-                "capital": scenario.get("capital"),
-                "employees": scenario.get("employees"),
-                "jurisdiction": scenario.get("jurisdiction"),
-                "use_excess_rate": scenario.get("use_excess_rate", False),
-            },
-            "corporate_local_tax_rate": sample_local.get("local_corporate_rate"),
-            "corporate_resident_levy_rate": sample_local.get("resident_levy_rate"),
-            "corporate_percapita": sample_local.get("percapita"),
-            "special_enterprise_rate": sample_local.get("special_enterprise_rate"),
-            "jurisdiction": sample_local.get("jurisdiction_label")
-            or sample_local.get("jurisdiction"),
-            "fallback_used": [],
-            "notes": notes,
-        },
+        "assumptions": _assumptions_block(
+            ctx=ctx,
+            fiscal_year_start=fiscal_year_start,
+            small_business=small_business,
+            include_bonus=include_bonus,
+            notes=notes,
+        ),
     }

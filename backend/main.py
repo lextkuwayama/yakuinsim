@@ -14,7 +14,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from services import corporate_tax_service, legal_calc_service, legal_master_service, ref_table_service
-from services.executive_comp_service import optimize_executive_comp
+from services.executive_comp_service import evaluate_executive_comp, optimize_executive_comp
 from services.withholding_tax_service import (
     get_table as get_withholding_monthly_table,
     list_tables as list_withholding_tables,
@@ -137,6 +137,36 @@ def public_executive_comp_optimize(
         )
     except ValueError as exc:
         # 入力不正・マスタ欠損はクライアントエラー（404 は「表が無い」表示用に残す）
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get(f"{PREFIX}/executive-comp/evaluate")
+def public_executive_comp_evaluate(
+    pretax_profit: int = Query(..., ge=0),
+    fiscal_year_start: str = Query(...),
+    executive_age: int = Query(..., ge=18, le=99),
+    monthly_salary: int = Query(..., ge=0),
+    annual_bonus: int = Query(0, ge=0),
+    small_business: bool = Query(True),
+    prefecture_code: str = Query("13"),
+    include_social: bool = Query(True),
+    bonus_payment_count: int = Query(1, ge=1, le=4),
+    as_of: Optional[str] = Query(None),
+) -> dict[str, Any]:
+    try:
+        return evaluate_executive_comp(
+            pretax_profit,
+            fiscal_year_start,
+            monthly_salary=monthly_salary,
+            annual_bonus=annual_bonus,
+            executive_age=executive_age,
+            small_business=small_business,
+            prefecture_code=prefecture_code,
+            include_social=include_social,
+            bonus_payment_count=bonus_payment_count,
+            as_of=as_of,
+        )
+    except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 

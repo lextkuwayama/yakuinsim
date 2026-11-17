@@ -198,6 +198,7 @@ export type ExecCompDelta = {
 };
 
 export type ExecCompResult = {
+  mode?: "optimize" | "manual";
   pretax_profit: number;
   fiscal_year_start: string;
   as_of: string;
@@ -207,8 +208,9 @@ export type ExecCompResult = {
   include_bonus?: boolean;
   bonus_step?: number;
   bonus_payment_count?: number;
-  monthly_step: number;
-  optimal: ExecCompCandidate;
+  monthly_step?: number;
+  selected?: ExecCompCandidate | null;
+  optimal: ExecCompCandidate | null;
   current: ExecCompCandidate | null;
   delta: ExecCompDelta | null;
   candidates: ExecCompCandidate[];
@@ -271,6 +273,33 @@ export async function optimizeExecutiveComp(params: {
   if (params.currentMonthly != null) q.set("current_monthly", String(params.currentMonthly));
   if (params.currentBonus != null) q.set("current_bonus", String(params.currentBonus));
   return getJson<ExecCompResult>(`/executive-comp/optimize?${q}`);
+}
+
+export async function evaluateExecutiveComp(params: {
+  pretaxProfit: number;
+  fiscalYearStart: string;
+  executiveAge: number;
+  smallBusiness: boolean;
+  prefectureCode?: string;
+  includeSocial: boolean;
+  monthlySalary: number;
+  annualBonus?: number;
+  bonusPaymentCount?: number;
+}): Promise<ExecCompResult> {
+  const q = new URLSearchParams({
+    pretax_profit: String(params.pretaxProfit),
+    fiscal_year_start: params.fiscalYearStart,
+    executive_age: String(params.executiveAge),
+    small_business: String(params.smallBusiness),
+    include_social: String(params.includeSocial),
+    monthly_salary: String(params.monthlySalary),
+    annual_bonus: String(params.annualBonus ?? 0),
+  });
+  if (params.prefectureCode) q.set("prefecture_code", params.prefectureCode);
+  if (params.bonusPaymentCount != null) {
+    q.set("bonus_payment_count", String(params.bonusPaymentCount));
+  }
+  return getJson<ExecCompResult>(`/executive-comp/evaluate?${q}`);
 }
 
 // --- 法人地方税 ---
