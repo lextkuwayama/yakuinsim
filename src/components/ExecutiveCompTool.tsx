@@ -61,6 +61,150 @@ function Section({
   );
 }
 
+type CompareRow = {
+  label: string;
+  now: number;
+  next: number;
+  /** 増えると良い項目は up、減ると良い項目は down、良し悪しのない項目は neutral */
+  better: "up" | "down" | "neutral";
+  strong?: boolean;
+};
+
+function CurrentComparison({
+  current,
+  focus,
+  includeBonus,
+}: {
+  current: ExecCompCandidate;
+  focus: ExecCompCandidate;
+  includeBonus: boolean;
+}) {
+  const gain = focus.combined_net - current.combined_net;
+  const burdenCut = current.total_burden - focus.total_burden;
+  const groups: { title: string; rows: CompareRow[] }[] = [
+    {
+      title: "役員報酬",
+      rows: [
+        { label: "毎月の役員報酬", now: current.monthly_salary, next: focus.monthly_salary, better: "neutral" },
+        ...(includeBonus
+          ? [
+              {
+                label: "役員賞与（年間）",
+                now: current.annual_bonus ?? 0,
+                next: focus.annual_bonus ?? 0,
+                better: "neutral" as const,
+              },
+            ]
+          : []),
+        { label: "年間の報酬合計", now: current.annual_salary, next: focus.annual_salary, better: "neutral" },
+      ],
+    },
+    {
+      title: "税金と社会保険料",
+      rows: [
+        { label: "法人の税金", now: current.corporate_tax, next: focus.corporate_tax, better: "down" },
+        {
+          label: "所得税",
+          now: current.income_tax + current.reconstruction_tax,
+          next: focus.income_tax + focus.reconstruction_tax,
+          better: "down",
+        },
+        { label: "住民税", now: current.resident_tax, next: focus.resident_tax, better: "down" },
+        { label: "社会保険料（会社＋本人）", now: current.total_social, next: focus.total_social, better: "down" },
+        { label: "合計", now: current.total_burden, next: focus.total_burden, better: "down", strong: true },
+      ],
+    },
+    {
+      title: "手取り",
+      rows: [
+        { label: "会社に残るお金", now: current.company_retained, next: focus.company_retained, better: "up" },
+        { label: "役員の手取り", now: current.executive_take_home, next: focus.executive_take_home, better: "up" },
+        { label: "会社と役員の手取り合計", now: current.combined_net, next: focus.combined_net, better: "up", strong: true },
+      ],
+    },
+  ];
+
+  const diffCls = (row: CompareRow) => {
+    const d = row.next - row.now;
+    if (d === 0 || row.better === "neutral") return "text-slate-600";
+    const good = row.better === "up" ? d > 0 : d < 0;
+    return good ? "text-[var(--taxx-green-700)]" : "text-red-600";
+  };
+
+  return (
+    <div className={toolsTheme.currentPanel}>
+      <h4 className={toolsTheme.currentPanelTitle}>いまの金額と比べると</h4>
+      <div className="mt-2 rounded-lg bg-white px-4 py-3 ring-1 ring-[var(--taxx-green-200)]">
+        {gain > 0 ? (
+          <>
+            <p className="text-sm font-bold text-slate-800">
+              おすすめの金額にすると、会社と役員の手取り合計が
+              <span className="mx-1 text-xl font-black text-[var(--taxx-green-700)]">
+                年 {manYen(gain)}
+              </span>
+              増える見込みです。
+            </p>
+            {burdenCut > 0 ? (
+              <p className="mt-0.5 text-[11px] text-slate-500">
+                税金と社会保険料の合計が {yen(burdenCut)} 減るためです。
+              </p>
+            ) : null}
+          </>
+        ) : gain === 0 ? (
+          <p className="text-sm font-bold text-slate-800">いまの金額がおすすめと同じです。</p>
+        ) : (
+          <p className="text-sm font-bold text-slate-800">
+            いまの金額の方が手取り合計が {yen(-gain)} 多くなっています（探す間隔の範囲内での比較です）。
+          </p>
+        )}
+      </div>
+
+      <div className="mt-3 overflow-auto rounded-lg bg-white ring-1 ring-slate-200">
+        <table className="min-w-full border-collapse text-right text-xs tabular-nums text-slate-700">
+          <thead className="bg-slate-50 text-[11px] font-black text-slate-500">
+            <tr>
+              <th className="px-3 py-2 text-left">項目（年間）</th>
+              <th className="px-3 py-2">いま</th>
+              <th className="px-3 py-2">おすすめ</th>
+              <th className="px-3 py-2">おすすめにすると</th>
+            </tr>
+          </thead>
+          {groups.map((g) => (
+            <tbody key={g.title}>
+              <tr>
+                <th
+                  colSpan={4}
+                  className="border-t border-slate-200 bg-slate-50/60 px-3 py-1 text-left text-[10px] font-black text-slate-400"
+                >
+                  {g.title}
+                </th>
+              </tr>
+              {g.rows.map((r) => {
+                const d = r.next - r.now;
+                return (
+                  <tr key={r.label} className={r.strong ? "bg-[var(--taxx-green-50)]/60 font-black" : ""}>
+                    <td className="border-t border-slate-100 px-3 py-1.5 text-left">{r.label}</td>
+                    <td className="border-t border-slate-100 px-3 py-1.5 text-slate-500">{yen(r.now)}</td>
+                    <td className="border-t border-slate-100 px-3 py-1.5 font-bold text-slate-900">
+                      {yen(r.next)}
+                    </td>
+                    <td className={`border-t border-slate-100 px-3 py-1.5 font-bold ${diffCls(r)}`}>
+                      {d === 0 ? "変わらず" : signedYen(d)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          ))}
+        </table>
+      </div>
+      <p className="mt-2 text-[10px] text-slate-500">
+        緑は手取りが増える・負担が減る変化、赤はその逆です。
+      </p>
+    </div>
+  );
+}
+
 export function ExecutiveCompTool() {
   const sim = useExecutiveCompSimulation();
 
@@ -80,7 +224,7 @@ export function ExecutiveCompTool() {
     maxWidthClass: "max-w-6xl" as const,
   };
 
-  const { result, dirty, current, delta, compareCurrent, includeBonus, focus } = sim;
+  const { result, dirty, current, compareCurrent, includeBonus, focus } = sim;
   const showBonus = isManual || includeBonus;
   const trialAnnualTotal = sim.trialMonthly * 12 + sim.trialBonus;
   const trialOverProfit = trialAnnualTotal > sim.profit;
@@ -489,83 +633,8 @@ export function ExecutiveCompTool() {
             }
           />
 
-          {!isManual && compareCurrent && current && delta && focus && !dirty ? (
-            <div className={toolsTheme.currentPanel}>
-              <h4 className={toolsTheme.currentPanelTitle}>いまの金額との比較（いま − おすすめ）</h4>
-              <div className="mt-3 flex flex-wrap gap-3">
-                <div className={toolsTheme.currentCard}>
-                  <div className="text-[10px] font-bold text-slate-500">毎月の役員報酬</div>
-                  <div className={toolsTheme.currentCardValue}>{signedYen(delta.monthly_salary)}</div>
-                  <div className="text-[10px] text-slate-500">
-                    いま {yen(current.monthly_salary)} → おすすめ {yen(focus.monthly_salary)}
-                  </div>
-                </div>
-                {includeBonus ? (
-                  <div className={toolsTheme.currentCard}>
-                    <div className="text-[10px] font-bold text-slate-500">役員賞与（年間）</div>
-                    <div className={toolsTheme.currentCardValue}>
-                      {signedYen(delta.annual_bonus ?? 0)}
-                    </div>
-                    <div className="text-[10px] text-slate-500">
-                      いま {yen(current.annual_bonus ?? 0)} → おすすめ {yen(focus.annual_bonus ?? 0)}
-                    </div>
-                  </div>
-                ) : null}
-                <div className={toolsTheme.currentCard}>
-                  <div className="text-[10px] font-bold text-slate-500">手取り合計の差</div>
-                  <div
-                    className={`text-lg font-black ${
-                      delta.combined_net < 0
-                        ? "text-red-700"
-                        : delta.combined_net > 0
-                          ? "text-[var(--taxx-green-700)]"
-                          : "text-slate-700"
-                    }`}
-                  >
-                    {signedYen(delta.combined_net)}
-                  </div>
-                  <div className="text-[10px] text-slate-500">
-                    いま {yen(current.combined_net)} ／ おすすめ {yen(focus.combined_net)}
-                  </div>
-                </div>
-                <div className={toolsTheme.currentCard}>
-                  <div className="text-[10px] font-bold text-slate-500">税金・社会保険料の差</div>
-                  <div
-                    className={`text-lg font-black ${
-                      delta.total_burden > 0
-                        ? "text-red-700"
-                        : delta.total_burden < 0
-                          ? "text-[var(--taxx-green-700)]"
-                          : "text-slate-700"
-                    }`}
-                  >
-                    {signedYen(delta.total_burden)}
-                  </div>
-                  <div className="text-[10px] text-slate-500">
-                    いま {yen(current.total_burden)} ／ おすすめ {yen(focus.total_burden)}
-                  </div>
-                </div>
-              </div>
-              <div className={toolsTheme.currentDetail}>
-                <div>法人の税金 {signedYen(delta.corporate_tax)}</div>
-                <div>所得税 {signedYen(delta.income_tax)}</div>
-                <div>住民税 {signedYen(delta.resident_tax)}</div>
-                <div>社会保険料 {signedYen(delta.total_social)}</div>
-                <div>会社に残るお金 {signedYen(delta.company_retained)}</div>
-                <div>役員の手取り {signedYen(delta.executive_take_home)}</div>
-              </div>
-              {delta.combined_net < 0 ? (
-                <p className="mt-2 text-[11px] font-bold text-red-700">
-                  いまの金額は、おすすめより手取り合計が {yen(Math.abs(delta.combined_net))} 少ない見込みです。
-                </p>
-              ) : delta.combined_net === 0 ? (
-                <p className={`mt-2 ${toolsTheme.optimalText}`}>いまの金額がおすすめと同じです。</p>
-              ) : (
-                <p className={`mt-2 ${toolsTheme.optimalText}`}>
-                  いまの金額の方が手取り合計が多くなっています（探す間隔の範囲内での比較です）。
-                </p>
-              )}
-            </div>
+          {!isManual && compareCurrent && current && focus && !dirty ? (
+            <CurrentComparison current={current} focus={focus} includeBonus={includeBonus} />
           ) : null}
 
           {!isManual &&
